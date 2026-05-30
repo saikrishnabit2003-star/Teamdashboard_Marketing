@@ -1,0 +1,445 @@
+.profilePage {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    font-family: 'Inter', sans-serif;
+}
+
+.profileContainer {
+    width: 100%;
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 40px;
+}
+
+.avatarSection {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.avatar {
+    width: 140px;
+    height: 140px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 56px;
+    color: white;
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2);
+}
+
+.roleBadge {
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #10b981;
+    color: white;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.userName {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.userSubtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 35px;
+    text-align: center;
+}
+
+.sidebarActions {
+    width: 100%;
+}
+
+.updatePasswordBtn {
+    width: 100%;
+    padding: 14px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.updatePasswordBtn:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* Main Content Styling */
+.mainContent {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.section {
+    background: white;
+    border-radius: 24px;
+    padding: 35px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.sectionTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* Personal Info Grid */
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.infoItem label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.infoItem p {
+    font-size: 16px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Profiles Section */
+.profilesWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profilesWrapper label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.profileTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 16px;
+    min-height: 60px;
+}
+
+.profileTag {
+    background: white;
+    color: #6366f1;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.noData {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 14px;
+}
+
+/* Append Profile Box */
+.appendBox {
+    margin-top: 10px;
+    padding: 25px;
+    background: #eff6ff;
+    border-radius: 20px;
+    border: 1px solid #dbeafe;
+}
+
+.appendBox label {
+    display: block;
+    margin-bottom: 15px;
+    color: #1e40af;
+}
+
+.appendForm {
+    display: flex;
+    gap: 12px;
+}
+
+.appendForm input {
+    flex: 1;
+    padding: 12px 18px;
+    background: white;
+    border: 1.5px solid #dbeafe;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.appendForm input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.appendForm button {
+    padding: 0 25px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.appendForm button:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+/* Security Section */
+.securityBox {
+    background: #fff;
+}
+
+.passwordField {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: #f9fafb;
+    border-radius: 14px;
+    margin-top: 10px;
+}
+
+.passwordField span {
+    font-family: monospace;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #374151;
+}
+
+.eyeBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.eyeBtn img {
+    height: 20px;
+    opacity: 0.5;
+}
+
+/* Modal Styling */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modalCard {
+    background: white;
+    width: 90%;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.modalHeader h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.closeBtn {
+    background: #f3f4f6;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 20px;
+    color: #6b7280;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.modalInputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modalInputGroup label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.modalInputGroup input {
+    padding: 14px 18px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.modalInputGroup input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.modalFooter {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.cancelBtn {
+    flex: 1;
+    padding: 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.submitBtn {
+    flex: 2;
+    padding: 14px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 30px;
+    border-radius: 20px;
+    z-index: 3000;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success { background: #059669; }
+.error { background: #dc2626; }
+
+.notificationIcon {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 900px) {
+    .profileContainer {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+    
+    .appendForm {
+        flex-direction: column;
+    }
+    
+    .appendForm button {
+        padding: 12px;
+    }
+}

@@ -1,0 +1,1003 @@
+/* ═══════════════════════════════════════════════════════════════
+   Accounts.module.css — Dashboard Accounts Page
+   Clean, professional data-table UI with dark navy + pink accents
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ─── Variables ─────────────────────────────────────────────── */
+:root {
+  --navy:          #13112a;
+  --accent:        #e8366f;
+  --accent-soft:   rgba(232, 54, 111, 0.1);
+  --blue:          #4a7cf7;
+  --blue-soft:     rgba(74, 124, 247, 0.1);
+  --green:         #2a7e4a;
+  --green-soft:    rgba(34, 197, 94, 0.1);
+  --red-soft:      rgba(239, 68, 68, 0.1);
+
+  --bg:            #f3f4f8;
+  --card:          #ffffff;
+  --border:        #e5e7eb;
+  --border-light:  #f1f3f6;
+
+  --text-primary:  #111827;
+  --text-secondary:#6b7280;
+  --text-muted:    #9ca3af;
+
+  --radius-sm:     6px;
+  --radius-md:     10px;
+  --radius-lg:     16px;
+  --radius-pill:   999px;
+
+  --shadow-sm:     0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:     0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,.12);
+
+  --transition:    0.18s ease;
+  --font:          'Inter', sans-serif;
+}
+.head {
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;;
+}
+.head p{
+  font-size: 24px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: transparent;
+  background: linear-gradient(to right, #6e6e6e, #2b2a2a);
+    -webkit-background-clip: text;
+    background-clip: text;
+  letter-spacing: 5px;
+}
+/* ─── Page wrapper ──────────────────────────────────────────── */
+.page {
+  font-family: var(--font);
+  height: calc(100vh - 110px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg);
+  padding: 0px 28px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ─── Tab header bar ────────────────────────────────────────── */
+.headers {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: fit-content;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.headers button {
+  padding: 7px 22px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+
+.headers button:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.headers button.activeTab,
+.headers button[data-active="true"] {
+  background: var(--navy);
+  color: #fff;
+}
+
+/* ─── Main content container ────────────────────────────────── */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 20px;
+}
+
+/* ─── Subcontainer1: title + add button row ─────────────────── */
+#subcontainer1 {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+#subcontainer1 p {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+#subcontainer1 button {
+  padding: 8px 22px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: 0 2px 8px rgba(19, 17, 42, 0.25);
+  letter-spacing: 0.02em;
+}
+
+#subcontainer1 button:hover {
+  background: #1e1b40;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(19, 17, 42, 0.35);
+}
+
+/* ─── Table wrapper ─────────────────────────────────────────── */
+.subcontainer2,
+.tablecontainer2 {
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  background: var(--card);
+}
+
+/* Scrollbar */
+.subcontainer2::-webkit-scrollbar,
+.tablecontainer2::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.subcontainer2::-webkit-scrollbar-track,
+.tablecontainer2::-webkit-scrollbar-track {
+  background: transparent;
+}
+.subcontainer2::-webkit-scrollbar-thumb,
+.tablecontainer2::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+/* ─── Table base ────────────────────────────────────────────── */
+.subcontainer2 table,
+.tablecontainer2 table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font);
+  background: var(--card);
+  table-layout: auto;
+}
+
+/* ─── Table head ────────────────────────────────────────────── */
+.subcontainer2 table thead,
+.tablecontainer2 table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--card);
+}
+
+.subcontainer2 table thead tr,
+.tablecontainer2 table thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+/* ── Common th defaults ── */
+.subcontainer2 table thead tr th,
+.tablecontainer2 table thead tr th {
+  padding: 13px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--navy);
+  text-align: left;           /* default left for all headers */
+  white-space: nowrap;
+  background: var(--card);
+}
+
+/* ── Common td defaults ── */
+.subcontainer2 table tbody tr td,
+.tablecontainer2 table tbody tr td {
+  padding: 11px 14px;
+  font-size: 0.83rem;
+  color: var(--text-primary);
+  text-align: left;           /* default left for all cells */
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Table body rows ─── */
+.subcontainer2 table tbody tr,
+.tablecontainer2 table tbody tr {
+  border-bottom: 1px dotted #d1d1d1;
+  transition: background var(--transition);
+  cursor: default;
+}
+
+/* .subcontainer2 table tbody  tr:nth-child(even){
+  background-color: rgb(219, 219, 219);
+} */
+
+/* .subcontainer2 table tbody tr:hover,
+.tablecontainer2 table tbody tr:hover {
+  background-color: #f8f9fa;
+} */
+
+.subcontainer2 table tbody tr:last-child,
+.tablecontainer2 table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CLIENT TABLE — column-specific rules
+   All nth-child selectors pair th + td together so alignment
+   is always in sync between header and cell.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* S.NO — center */
+.subcontainer2 table thead tr th:nth-child(1),
+.subcontainer2 table tbody tr td:nth-child(1) {
+  width: 60px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Client ID — pink accent, left */
+.subcontainer2 table thead tr th:nth-child(2),
+.subcontainer2 table tbody tr td:nth-child(2) {
+  width: 120px;
+  text-align: center;
+}
+.subcontainer2 table tbody tr td:nth-child(2) {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Client Name — left */
+.subcontainer2 table thead tr th:nth-child(3),
+.subcontainer2 table tbody tr td:nth-child(3) {
+  width: 200px;
+  text-align: center;
+}
+
+/* Location — left */
+.subcontainer2 table thead tr th:nth-child(4),
+.subcontainer2 table tbody tr td:nth-child(4) {
+  width: 120px;
+  text-align: center;
+}
+
+/* Email — left (was incorrectly center on th only) */
+.subcontainer2 table thead tr th:nth-child(5),
+.subcontainer2 table tbody tr td:nth-child(5) {
+  width: 230px;
+  text-align: center;
+  overflow-wrap:anywhere;
+
+}
+.subcontainer2 table tbody tr td:nth-child(5){
+  text-align: left;
+}
+/* Whatsapp — left */
+.subcontainer2 table thead tr th:nth-child(6),
+.subcontainer2 table tbody tr td:nth-child(6) {
+  width: 160px;
+  text-align: center;
+}
+
+/* Client Handler — left */
+.subcontainer2 table thead tr th:nth-child(7),
+.subcontainer2 table tbody tr td:nth-child(7) {
+  width: 160px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Bank Account — center */
+.subcontainer2 table thead tr th:nth-child(8),
+.subcontainer2 table tbody tr td:nth-child(8) {
+  width: 180px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Orders — center both header and cell */
+.subcontainer2 table thead tr th:nth-child(9),
+.subcontainer2 table tbody tr td:nth-child(9) {
+  width: 60px;
+  text-align: center;
+}
+.subcontainer2 table tbody tr td:nth-child(9) {
+  color: var(--accent);
+  font-weight: 700;
+  overflow: visible;
+}
+
+/* Photo — center both header and cell */
+.subcontainer2 table thead tr th:nth-child(10),
+.subcontainer2 table tbody tr td:nth-child(10) {
+  width: 60px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPLOYEE & ADMIN TABLE — column-specific rules
+   ═══════════════════════════════════════════════════════════════ */
+
+/* S.NO — center */
+.tablecontainer2 table thead tr th {
+    background: linear-gradient(180deg, var(--navy) 0%, rgba(3, 3, 3,0.7) 100%) !important;
+  /* background-color: var(--navy); */
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  padding: 15px 16px;
+  border-bottom: none;
+
+}
+.tablecontainer2 table thead tr th:nth-child(1),
+.tablecontainer2 table tbody tr td:nth-child(1) {
+  width: 60px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Name — pink accent, left */
+.tablecontainer2 table thead tr th:nth-child(2),
+.tablecontainer2 table tbody tr td:nth-child(2) {
+  width: 180px;
+  text-align: center;
+}
+.tablecontainer2 table tbody tr td:nth-child(2) {
+  color: var(--accent);
+  font-weight: 600;
+  overflow-wrap: break-word;
+  white-space: normal;
+  text-align: left;
+}
+
+/* Email — blue, left */
+.tablecontainer2 table thead tr th:nth-child(3),
+.tablecontainer2 table tbody tr td:nth-child(3) {
+  width: 220px;
+  text-align: center;
+}
+.tablecontainer2 table tbody tr td:nth-child(3) {
+  width: 220px;
+  color: var(--blue);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+/* Password — left */
+.tablecontainer2 table thead tr th:nth-child(4),
+.tablecontainer2 table tbody tr td:nth-child(4) {
+  width: 160px;
+  text-align: left;
+}
+
+/* Whatsapp — left */
+.tablecontainer2 table thead tr th:nth-child(5),
+.tablecontainer2 table tbody tr td:nth-child(5) {
+  width: 150px;
+  text-align: left;
+}
+
+/* Profile Holder — left, allow wrap */
+.tablecontainer2 table thead tr th:nth-child(6),
+.tablecontainer2 table tbody tr td:nth-child(6) {
+  width: 180px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Branch — left */
+.tablecontainer2 table thead tr th:nth-child(7),
+.tablecontainer2 table tbody tr td:nth-child(7) {
+  width: 140px;
+  text-align: center;
+}
+.tablecontainer2 table thead tr th:nth-child(8),
+.tablecontainer2 table tbody tr td:nth-child(8) {
+  width: 180px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+
+}
+.tablecontainer2 table thead tr th:nth-child(9),
+.tablecontainer2 table tbody tr td:nth-child(9) {
+  width: 140px;
+  text-align: center;
+}
+.tablecontainer2 table tbody tr td:nth-child(10) {
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.78rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(232, 54, 111, 0.2);
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 4px rgba(232, 54, 111, 0.04);
+  margin: 10px 15px 0px 0px;
+}
+.tablecontainer2 table thead tr th:nth-child(10),
+.tablecontainer2 table tbody tr td:nth-child(10) {
+  width: 140px;
+  text-align: center;
+}
+
+/* ─── Scrollable cell (Profile Holder multi-value) ──────────── */
+.scrollableCell {
+  width: 100%;
+  max-height: 60px;
+  overflow-y: auto;
+  white-space: pre-line;
+  line-height: 1.5;
+  word-break: break-word;
+  padding-right: 4px;
+}
+
+.scrollableCell::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollableCell::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.scrollableCell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ─── N/A muted styling ─────────────────────────────────────── */
+.subcontainer2 table tbody tr td:empty::after,
+.tablecontainer2 table tbody tr td:empty::after {
+  content: '—';
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   POPUP MODAL
+   ═══════════════════════════════════════════════════════════════ */
+
+.popupcontainer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.mainpopupbox {
+  background: #fff;
+  width: min(96vw, 1180px);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.smallPopup {
+  width: min(96vw, 650px);
+}
+
+.mainpopupbox::-webkit-scrollbar { width: 5px; }
+.mainpopupbox::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+/* ─── Popup Form ────────────────────────────────────────────── */
+.popupform {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formcontainer1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+  width: 100%;
+}
+
+.formcontainer1 > .formContainer {
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .formcontainer1 { grid-template-columns: 1fr; }
+}
+
+.formcontainer2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  .formcontainer2col { grid-template-columns: 1fr; }
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Fieldset input style ──────────────────────────────────── */
+.inputFieldset {
+  position: relative;
+  border: 1.5px solid #c7d8fc;
+  border-radius: var(--radius-md);
+  padding: 2px 10px 4px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition);
+}
+
+.inputFieldset:focus-within {
+  border-color: #7c5cbf;
+}
+
+.inputFieldset:focus-within .inputLegend {
+  color: #7c5cbf;
+}
+
+.inputLegend {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--blue);
+  padding: 0 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color var(--transition);
+}
+
+.inputFieldset input {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 4px 0;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.inputFieldset input::placeholder {
+  color: var(--text-muted);
+}
+
+.selectInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 4px 0;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.selectInput option {
+  background: #fff;
+  color: var(--text-primary);
+  font-size: 1rem;
+  text-align: left;
+  text-transform: capitalize;
+  padding-left: 10px;
+  text-justify: distribute;
+  
+}
+
+.textAreaInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 4px 0;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 40px;
+}
+
+/* ─── Footer buttons ────────────────────────────────────────── */
+.footerpopup {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.footerpopup button {
+  flex: 1;
+  padding: 11px 0;
+  border-radius: var(--radius-md);
+  border: none;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.footerpopup button:hover {
+  transform: translateY(-1px);
+}
+
+#cancelbtn {
+  background: #f1f3f6;
+  color: var(--text-secondary);
+}
+#cancelbtn:hover { background: #e5e7eb; }
+
+#submitbtn {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(19, 17, 42, 0.25);
+}
+#submitbtn:hover { background: #1e1b40; }
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  border-radius: var(--radius-md);
+  z-index: 9999;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  animation: slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+
+.success {
+  background: #16a34a;
+}
+
+.error {
+  background: #dc2626;
+}
+
+.notificationIcon {
+  width: 22px;
+  height: 22px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ─── Premium Client Table Specific Styles ───────────────────── */
+
+.clientIdBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.78rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(232, 54, 111, 0.2);
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 4px rgba(232, 54, 111, 0.04);
+}
+
+.clientNameCell {
+  font-weight: 600 !important;
+  color: var(--navy) !important;
+  font-size: 0.85rem !important;
+}
+
+.locationBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: var(--radius-pill);
+  border: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.emailCell {
+  color: var(--blue) !important;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.handlerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0d9488;
+  background: #f0fdfa;
+  border-radius: var(--radius-pill);
+  border: 1px solid #ccfbf1;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+.refBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #d97706;
+  background: #fffbeb;
+  border-radius: var(--radius-md);
+  border: 1px solid #fef3c7;
+  letter-spacing: 0.02em;
+}
+
+.ordersBadge {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #065bd3;
+  background: #f1f5f9;
+  border-radius: 50%;
+  border: 1px solid #005dd6;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Client table distinct container headers and rows styling ─── */
+.subcontainer2 {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg) !important;
+  background: var(--card);
+}
+
+.subcontainer2 table thead tr th {
+  background: linear-gradient(180deg, var(--navy) 0%, rgba(3, 3, 3,0.7) 100%) !important;
+  /* background-color: var(--navy); */
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  padding: 15px 16px;
+  border-bottom: none;
+}
+
+.subcontainer2 table tbody tr {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.subcontainer2 table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.subcontainer2 table tbody tr:hover {
+  background-color: rgba(74, 124, 247, 0.04) !important;
+  transform: translateY(-0.5px);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Style the tag blocks in Order type scrollable cell */
+.subcontainer2 .scrollableCell {
+  padding: 4px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 70px;
+}
+
+.subcontainer2 .scrollableCell div {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px !important;
+  background: rgba(74, 124, 247, 0.08) !important;
+  color: var(--blue) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(74, 124, 247, 0.15) !important;
+  text-transform: uppercase;
+  margin: 0 !important;
+  box-shadow: 0 1px 2px rgba(74, 124, 247, 0.02);
+}
+
+.rangeCell {
+  cursor: pointer;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  text-decoration: underline dotted;
+  transition: all var(--transition);
+}
+
+.rangeCell:hover {
+  color: #be185d !important;
+  text-decoration: underline solid;
+}
+
+.rangeCell{
+  text-decoration: none;
+  color: black;
+}
+
+.editInput {
+  width: 100%;
+  height: 32px;
+  padding: 4px 8px;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  text-align: center;
+  background: #fff;
+  color: var(--text-primary);
+  outline: none;
+  transition: box-shadow var(--transition);
+}
+
+.editInput:focus {
+  box-shadow: 0 0 0 3px rgba(74, 124, 247, 0.15);
+  border-color: var(--navy);
+}
+/* --- Tooltip for Orders --------------------------------------- */
+.tooltipContainer {
+  position: relative;
+  display: inline-flex;
+  cursor: help;
+}
+
+.tooltipContent {
+  visibility: hidden;
+  position: absolute;
+  right: 125%;
+  top: 50%;
+  transform: translateY(-50%) translateX(5px);
+  background: var(--navy);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: pre-wrap;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  box-shadow: var(--shadow-md);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  min-width: max-content;
+  text-align: left;
+}
+
+.tooltipContent::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--navy);
+}
+
+.tooltipContainer:hover .tooltipContent {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}

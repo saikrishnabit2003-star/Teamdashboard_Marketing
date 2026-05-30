@@ -1,0 +1,610 @@
+:root {
+    --card: #ffffff;
+  
+}
+
+.contentpage{
+    height: 100vh;
+    width: 100%;
+    background-color: var(--bg);
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+    /* overflow-x: hidden; */
+}
+.container1{
+    background-color: white;
+}
+
+.analysiscontainer{
+    
+    /* min-height: 200px;
+    height: 300px; */   
+    
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+}
+
+.container1{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    column-gap: 10px;
+    padding: 15px;
+    border-radius: 5px;
+    
+}
+.container1 p{
+    padding: 15px;
+}
+.container1 h2{
+    padding-left: 15px;
+    font-size: xx-large;
+    color: var(--theme-color, #5a00f5);
+}
+#overalldetails{
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+    /* overflow-x: auto; */
+    padding: 10px;
+    background-color: var(--card);
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+}
+.overalldetailstitle{
+    text-align: center;
+    font-size:medium;
+    color: var(--theme-color, #5a00f5);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.container2{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 20PX;
+}
+
+
+#analysissubcontainer1{
+    width: 100%;
+    
+    display: flex;
+    flex-direction: row;
+    row-gap: 20px;
+    justify-content: space-evenly;
+}
+.amountbox1{
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    justify-content: space-between;
+}
+#amountcontainer{
+    background-color: rgb(129, 129, 129,0.1);
+    height: 100px;
+    min-width: auto;
+    width: 340px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    border-radius: 15px;
+    border:1px solid rgb(145, 139, 139);;
+    padding: 15px;
+    /* justify-content: space-evenly; */
+}
+#analaysisimg1,
+#analaysisimg2,
+#analaysisimg3,
+#analaysisimg4{
+    height: 70px;
+    width: auto;
+    border: 5px solid transparent;
+    background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #caace9 20%, #df74df,#ec00ec);
+    border-image-slice: 1;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    border-radius: 50%;
+    
+    /* temp */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#analaysisimg1 img,
+
+#analaysisimg12 img{
+    height: 100%;
+    width: auto;
+}
+#analaysisimg5{
+    height: 70px;
+    width: auto;
+    border: 5px solid transparent;
+    background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #c3b1d4 20%, #df74df,#ec00ec);
+    border-image-slice: 1;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    border-radius: 50%;
+    
+    /* temp */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+#analaysisimg3 img,
+#analaysisimg42 img,
+
+#analaysisimg22 img,
+#analaysisimg25 img{
+    height: 100%;
+    width: auto;
+    padding: 8px;
+}
+#analaysisimg4 img,
+#analaysisimg5 img,
+#analaysisimg2 img,
+#analaysisimg32 img{
+    height: 100%;
+    width: auto;
+    padding: 12px;
+}
+/* temp */
+#analaysisimg1 h1,
+#analaysisimg2 h1,
+#analaysisimg3 h1,
+#analaysisimg4 h1{
+    font-size: medium;
+    padding: 15px;
+}
+#analaysisimg1{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #7d6be2,#5a19f1);}
+#analaysisimg2{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #32b95b,#04cf48);}
+#analaysisimg3{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #d18051,#ec3700);}
+#analaysisimg4{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #5299eb,#397cc9);}
+
+
+#analaysisimg img{
+    min-height: 50%;
+    min-width: 50%;
+    height: 100%;
+    width: 100%;
+}
+#analaysistext{
+    width: 60%;
+    text-align: center;
+}
+#analaysistext :nth-child(1) span{
+    color:black;
+}
+#analaysistext :nth-child(1){
+    color: red;
+    text-shadow: none;
+    font-family:monospace;
+    font-size: x-large;
+    font-weight: bold;
+}
+#analaysistext :nth-child(2){
+    font-size: medium;
+    text-transform: capitalize;
+    color: black;
+    text-shadow: none;
+    text-align: center;
+    font-weight: 600;
+    font-variant: small-caps;
+}
+#analaysistext2{
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    row-gap: 3px;
+}
+#analaysisspan{
+    font-weight: bold;
+    font-variant: small-caps;
+    font-size:large;
+    color: black;
+    margin-right: 3px;
+}
+#analaysistext2 p{
+    color: red;  
+}
+#analaysistotal{
+    border-top: 1px solid rgb(211, 201, 201);
+    margin-top: 5px;
+    padding-top: 5px;
+}
+#analysissubcontainer2{
+    width: 60%;
+    height: 100%;
+    padding: 5px;
+    border-radius: 10px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+}
+
+.mapcalendercontainer{
+    height: auto;
+    width: auto;
+}
+
+.container3{
+    width: 100%;
+    height: auto;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 20px;
+    /* padding: 10px; */
+    background-color: transparent;
+    border-radius: 20px;
+}
+
+/* --- BOX 1: CALENDAR SECTION --- */
+#box1 {
+    background-color: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers the inline calendar */
+    justify-content: flex-start;
+    width: 40%;
+    height: 100%;
+    overflow: hidden;
+    padding: 15px;
+}
+
+#box1 h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    color: var(--theme-color, #5a00f5);
+    font-weight: 700;
+    align-self: center;
+
+}
+
+#box1 p {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #f0eaff; /* Light purple tint */
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: var(--theme-color, #5a00f5); 
+    font-weight: 600;
+    border: 1px solid var(--theme-color, #5a00f5);
+}
+
+/* --- REACT DATEPICKER INTERNAL STYLING --- */
+/* We use :global because the library generates these classes outside our module scope */
+#box1 :global(.react-datepicker) {
+    border: none !important;
+    font-family: 'Arial', sans-serif;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#box1 :global(.react-datepicker__month-container) {
+    float: none; /* Fixes alignment in flex containers */
+    width: 100%;
+}
+
+#box1 :global(.react-datepicker__day-name), 
+#box1 :global(.react-datepicker__day) {
+    width: 3rem; /* Makes the calendar slightly larger/readable */
+    line-height: 3rem;
+    margin: 0.2rem;
+}
+
+#box1 :global(.react-datepicker__header) {
+    background-color: white !important;
+    border-bottom: 1px solid #eee !important;
+    padding-top: 10px;
+}
+#box1 :global(.react-datepicker__day--in-selecting-range){
+    background-color: white;
+    color: black;
+}
+
+#box1 :global(.react-datepicker__day--in-range),
+#box1 :global(.react-datepicker__day--selected){
+    background-color: #dddddd !important; /* Matching your Username color */
+    color: black !important;
+    border-radius: 50% !important; /* Circular selection look */
+}
+
+#box2{
+    /* border: 2px dotted red; */
+    width: 60%;
+    height: 100%;
+    background-color: white;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.container4{
+    width: 100%;
+    height: 400px;
+    padding: 5px;
+    /* min-height: 400px;  */
+    background-color: #ffffff; /* Standard map placeholder grey */
+    z-index: 1;
+    position: relative;
+    border-radius: 20px;
+}
+
+
+.mapcalendercontainer{
+    height: 700px;
+    width: 100%;
+    /* border: 5px solid red; */
+}
+
+.calendar-container {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+/* Customizing the DatePicker colors to match your Purple theme */
+.react-datepicker {
+    font-family: 'Inter', sans-serif !important;
+    border: none !important;
+}
+
+.react-datepicker__header {
+    background-color: #fff !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.react-datepicker__day--selected, 
+.react-datepicker__day--in-range,
+.react-datepicker__day--in-selecting-range {
+    background-color: var(--theme-color, #7d2ae8) !important; /* DeskApp Purple */
+    color: white !important;
+    border-radius: 4px;
+}
+
+.react-datepicker__day--keyboard-selected {
+    background-color: #00eccf !important; /* Secondary Cyan accent */
+}
+
+.btn-primary {
+    background-color: var(--theme-color, #7d2ae8);
+    border: none;
+    padding: 10px 25px;
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.container4{
+    display: flex;
+    flex-direction: column;
+}
+
+.tablecontainer{
+    width: 100%;
+    height: 520px;
+    background-color: white;
+    padding: 10px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: 20px;
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none;
+}
+.tablecontainer::-webkit-scrollbar{
+    display: none;
+}
+.tablecontainerdata{
+    height: 100%;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    background-color: white;
+    border-radius: 20px;
+    /* padding-top: 20px; */
+}
+.tabledata{
+    width: 100%;
+    height: auto;
+    border-collapse: collapse;
+    background-color: white;
+    /* padding: 10px;
+    margin-top: 10px; */
+}
+
+.tabledata thead{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    
+}
+.tabledata tbody tr td{
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+.tabledata tbody tr{
+    border-bottom: 1px solid rgb(0, 0, 0,0.1);
+}
+.tabledata thead tr th{
+    background-color: rgb(255, 255, 255);
+    color:var(--theme-color, #7d2ae8);
+    font-weight: 700;
+    font-size:large;
+    text-transform: capitalize;
+}
+
+.tabledata td {
+  text-align: center;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  white-space: wrap;
+  background-color: white;
+}
+#tableheader{
+    padding: 10px;
+    font-size: x-large;
+    font-family:'Lucida Sans Unicode';
+    font-variant: small-caps;
+    font-weight: 600;
+    /* display: flex;
+    align-items: center; */
+    background-color: white;
+}
+.tabledata tbody tr :nth-child(2),
+.tabledata tbody tr :nth-child(8){
+    color: red;
+}
+
+.calendercheckbox{
+    margin-left: 20px;
+    
+}
+
+/* --- Tablet and Mobile Responsive Adjustments --- */
+@media screen and (max-width: 1024px) {
+    /* Allow the page to grow with content instead of being locked to screen height */
+    .contentpage {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    /* Stack the Welcome banner content */
+    .container1 {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .container1 img {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+    }
+
+    /* Stack the 4 amount boxes */
+    .container2 {
+        flex-direction: column;
+        align-items: center;
+        row-gap: 15px;
+    }
+
+    #amountcontainer {
+        width: 100%; /* Full width on mobile */
+        max-width: 500px;
+    }
+
+    /* Calendar and Pie Chart: Change from row to column */
+    .container3 {
+        flex-direction: column;
+        row-gap: 20px;
+    }
+
+    #box1, #box2 {
+        width: 100%;
+        height: 450px; /* Reduced height for better mobile fit */
+    }
+
+    /* Ensure Map container has enough height */
+    .container4 {
+        height: 400px;
+    }
+}
+#analaysisimg12,
+#analaysisimg22,
+#analaysisimg25,
+#analaysisimg32,
+#analaysisimg42{
+    height: 70px;
+    width: auto;
+    border: 5px solid transparent;
+    background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #caace9 20%, #df74df,#ec00ec);
+    border-image-slice: 1;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    border-radius: 50%;
+    
+    /* temp */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* temp */
+#analaysisimg12 h1,
+#analaysisimg22 h1,
+#analaysisimg32 h1,
+#analaysisimg42 h1{
+    font-size: medium;
+    padding: 15px;
+}
+#analaysisimg42{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #ebc552,hsl(45, 80%, 51%));}
+#analaysisimg32{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #32b995,#42b067);}
+#analaysisimg22{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #81bdcf,#57bcd8);}
+#analaysisimg25{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #5aebdc,#0bf7df);}
+#analaysisimg12{background-image: linear-gradient(#ffffff, #e2e2e2), 
+                      linear-gradient(to right, #e0e0e0 20%, #eb52b8,#f000a0);}
+
+/* --- Small Phone Specifics --- */
+@media screen and (max-width: 480px) {
+    .container1 h2 {
+        font-size: 1.5rem;
+    }
+
+    /* Allow the table to scroll horizontally without breaking the layout */
+    .tablecontainer {
+        padding: 5px;
+        overflow-x: auto;
+    }
+
+    .tabledata {
+        min-width: 600px; /* Forces scrollability so columns don't squish */
+    }
+
+    /* Adjust font sizes for mobile readability */
+    .tabledata th, .tabledata td {
+        font-size: 0.7rem;
+        padding: 8px 4px;
+    }
+
+    #tableheader {
+        font-size: 1.1rem;
+    }
+}
+
+/* Remove focus outlines from Recharts elements when clicked */
+:global(.recharts-wrapper) *,
+:global(.recharts-surface) * {
+    outline: none !important;
+}
