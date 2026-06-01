@@ -56,16 +56,18 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
     return (
         <div className={styles.formcontainer1}>
             <div className={styles.formContainer}>
+
+                {/* Client Name */}
                 <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>order date</legend>
+                    <legend className={styles.inputLegend}>Client Name</legend>
                     <input
-                        name="order_date"
-                        value={formValues.order_date}
+                        name="client_name"
+                        value={formValues.client_name}
                         onChange={handleChange}
-                        placeholder="select date"
-                        type="date"
+                        placeholder="Enter Name"
                     />
                 </fieldset>
+
                 {/* Client ID */}
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Client ID</legend>
@@ -77,6 +79,17 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     />
                 </fieldset>
 
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>order date</legend>
+                    <input
+                        name="order_date"
+                        value={formValues.order_date}
+                        onChange={handleChange}
+                        placeholder="select date"
+                        type="date"
+                    />
+                </fieldset>
+                
                 {/* reference id */}
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Reference ID</legend>
@@ -88,15 +101,40 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     />
                 </fieldset>
 
-                {/* Client Name */}
                 <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Client Name</legend>
+                    <legend className={styles.inputLegend}>Client Ref no</legend>
                     <input
-                        name="client_name"
-                        value={formValues.client_name}
+                        name="client_ref_no"
+                        value={formValues.client_ref_no}
                         onChange={handleChange}
-                        placeholder="Enter Name"
+                        placeholder="EX: REF-001"
                     />
+                </fieldset>
+
+                {/* Location */}
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>Country</legend>
+                    <input
+                        name="location"
+                        value={formValues.location}
+                        onChange={handleChange}
+                        placeholder="Country"
+                    />
+                </fieldset>
+
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>Client Handler</legend>
+                    <select
+                        name="client_handler"
+                        value={formValues.client_handler}
+                        onChange={handleChange}
+                        className={styles.selectInput}
+                    >
+                        <option value="">Assigned To</option>
+                        {client_handlers && client_handlers.map((handler, index) => (
+                            <option key={index} value={handler}>{handler}</option>
+                        ))}
+                    </select>
                 </fieldset>
 
                 <fieldset className={styles.inputFieldset}>
@@ -114,17 +152,10 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     </select>
                 </fieldset>
 
-                {/* Location */}
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Country</legend>
-                    <input
-                        name="location"
-                        value={formValues.location}
-                        onChange={handleChange}
-                        placeholder="Country"
-                    />
-                </fieldset>
+                
+            </div>
 
+            <div className={styles.formContainer}>
                 {/* Email */}
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Email</legend>
@@ -145,41 +176,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         onChange={handleChange}
                         placeholder="+91..."
                     />
-                </fieldset>
-            </div>
-
-            <div className={styles.formContainer}>
-
-
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Writing Start Date</legend>
-                    <input
-                        name="writing_start_date"
-                        value={formValues.writing_start_date}
-                        onChange={handleChange}
-                        type="date"
-                    />
-                </fieldset>
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>publish Start Date</legend>
-                    <input
-                        name="publish_start_date"
-                        value={formValues.publish_start_date}
-                        onChange={handleChange}
-                        type="date"
-                    />
-                </fieldset>
-
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Client Drive </legend>
-                    <input
-                        name="client_drive_link"
-                        value={formValues.client_drive_link}
-                        onChange={handleChange}
-                        placeholder="paste your link"
-                        type="url"
-                    />
-                </fieldset>
+                </fieldset>  
 
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Title</legend>
@@ -192,45 +189,6 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                 </fieldset>
 
                 <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Client Handler</legend>
-                    <select
-                        name="client_handler"
-                        value={formValues.client_handler}
-                        onChange={handleChange}
-                        className={styles.selectInput}
-                    >
-                        <option value="">Assigned To</option>
-                        {client_handlers && client_handlers.map((handler, index) => (
-                            <option key={index} value={handler}>{handler}</option>
-                        ))}
-                    </select>
-                </fieldset>
-
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Client Ref no</legend>
-                    <input
-                        name="client_ref_no"
-                        value={formValues.client_ref_no}
-                        onChange={handleChange}
-                        placeholder="EX: REF-001"
-                    />
-                </fieldset>
-
-                <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Order Type</legend>
-                    <select
-                        name="order_type"
-                        value={formValues.order_type}
-                        onChange={handleChange}
-                        className={styles.selectInput}
-                    >
-                        <option value="">Select an option</option>
-                        {settingsOptions.order_type.map((opt, idx) => (
-                            <option key={idx} value={opt}>{opt}</option>
-                        ))}
-                    </select>
-                </fieldset>
-                <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Journal</legend>
                     <textarea
                         name="journal"
@@ -241,9 +199,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
 
                     />
                 </fieldset>
-            </div>
 
-            <div className={styles.formContainer}>
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Index</legend>
                     <select
@@ -274,13 +230,66 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     </select>
                 </fieldset>
 
+
+
+
+
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>Writing Start Date</legend>
+                    <input
+                        name="writing_start_date"
+                        value={formValues.writing_start_date}
+                        onChange={handleChange}
+                        type="date"
+                    />
+                </fieldset>
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>publish Start Date</legend>
+                    <input
+                        name="publish_start_date"
+                        value={formValues.publish_start_date}
+                        onChange={handleChange}
+                        type="date"
+                    />
+                </fieldset>
+
+                
+                
+            </div>
+
+            <div className={styles.formContainer}>
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>Client Drive </legend>
+                    <input
+                        name="client_drive_link"
+                        value={formValues.client_drive_link}
+                        onChange={handleChange}
+                        placeholder="paste your link"
+                        type="url"
+                    />
+                </fieldset>
+                <fieldset className={styles.inputFieldset}>
+                    <legend className={styles.inputLegend}>Order Type</legend>
+                    <select
+                        name="order_type"
+                        value={formValues.order_type}
+                        onChange={handleChange}
+                        className={styles.selectInput}
+                    >
+                        <option value="">Select an option</option>
+                        {settingsOptions.order_type.map((opt, idx) => (
+                            <option key={idx} value={opt}>{opt}</option>
+                        ))}
+                    </select>
+                </fieldset>
+
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>client details</legend>
                     <input
                         name="client_details"
                         value={formValues.client_details}
                         onChange={handleChange}
-                        placeholder="URL or Enter the details"
+                        placeholder="Drive link..."
                     />
                 </fieldset>
 
@@ -303,8 +312,8 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                 </fieldset>
 
                 <fieldset className={styles.inputFieldset}>
-                    <legend className={styles.inputLegend}>Bank account</legend>
-                    <select
+                    <legend className={styles.inputLegend}>Client Bank account</legend>
+                    {/* <select
                         name="bank_account"
                         value={formValues.bank_account}
                         onChange={handleChange}
@@ -314,7 +323,13 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         {settingsOptions.bank_account.map((opt, idx) => (
                             <option key={idx} value={opt}>{opt}</option>
                         ))}
-                    </select>
+                    </select> */}
+                    <input
+                        name="client_bank_account"
+                        value={formValues.bank_account}
+                        onChange={handleChange}
+                        placeholder="Enter client bank account"
+                    />
                 </fieldset>
 
                 <fieldset className={styles.inputFieldset}>

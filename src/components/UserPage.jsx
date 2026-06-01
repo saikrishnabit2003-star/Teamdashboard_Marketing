@@ -127,10 +127,12 @@ export function UserPage({ searchTerm }) {
             countryAmount[country] += paidAmount;
         });
 
-        return Object.keys(countryAmount).map(name => ({
-            name,
-            value: Math.round(countryAmount[name] * 100) / 100
-        }));
+        return Object.keys(countryAmount)
+            .map(name => ({
+                name,
+                value: Math.round(countryAmount[name] * 100) / 100
+            }))
+            .filter(item => item.value > 0);
     };
 
     // Fetch GET method
@@ -175,7 +177,8 @@ export function UserPage({ searchTerm }) {
                     const totalOrdold = clientdetail.filter(c => c.is_new_order.toLowerCase() === "no").length;
                     const pendingClt = clientdetail.filter(c => {
                         const status = (c.payment_status || "").toLowerCase();
-                        return status === "pending" || status === "not yet" || status === "partial paid" && (c.paid_amount < c.total_amount) && c.order_status.toLowerCase() !== "inactive";
+                        //  return status === "pending" || status === "partial paid" || status === "not yet" && (c.paid_amount < c.total_amount) && c.order_status.toLowerCase() !== "inactive";
+                        return status === "pending" && (c.paid_amount <= c.total_amount) && c.order_status.toLowerCase() !== "inactive";
                     }).length;
                     const partialClt = clientdetail.filter(c => {
                         const status = (c.order_status || "").toLowerCase();
@@ -222,7 +225,7 @@ export function UserPage({ searchTerm }) {
             endOfDay.setHours(23, 59, 59, 999);
 
             filteredList = ordersData.filter(c => {
-                const dateStr = c.created_at || c.order_date;
+                const dateStr = c.created_at;
                 if (!dateStr) return false;
                 const itemDate = new Date(dateStr);
                 return itemDate >= startOfDay && itemDate <= endOfDay;
@@ -237,7 +240,7 @@ export function UserPage({ searchTerm }) {
             const curYear = now.getFullYear();
 
             filteredList = ordersData.filter(c => {
-                const dateStr = c.created_at || c.order_date;
+                const dateStr =  c.created_at;
                 if (!dateStr) return false;
                 const d = new Date(dateStr);
                 return d.getMonth() === curMonth && d.getFullYear() === curYear;
@@ -254,7 +257,8 @@ export function UserPage({ searchTerm }) {
         const mTotalOrdersOld = filteredList.filter(c => c.is_new_order.toLowerCase() === "no").length;
         const mPendingCount = filteredList.filter(c => {
             const status = (c.payment_status || "").toLowerCase();
-            return status === "pending" || status === "partial paid" || status === "not yet" && (c.paid_amount < c.total_amount) && c.order_status.toLowerCase() !== "inactive";
+            // return status === "pending" || status === "partial paid" || status === "not yet" && (c.paid_amount < c.total_amount) && c.order_status.toLowerCase() !== "inactive";
+              return status === "pending" && (c.paid_amount <= c.total_amount) && c.order_status.toLowerCase() !== "inactive";
         }).length;
         const mRejCount = filteredList.filter(c => {
             const status = (c.order_status || "").toLowerCase();

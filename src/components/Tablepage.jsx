@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { BASE_URL } from '../config';
+import HistoryContextMenu from './HistoryContextMenu';
 
 const formatDate = (dateString) => {
     if (!dateString || dateString === 'N/A') return 'N/A';
@@ -69,10 +70,11 @@ const defaultDraggableColumns = [
     { key: 'client_affiliations', label: 'client affiliations', isFilter: false },
     { key: 'remarks', label: 'remarks', isFilter: false },
     { key: 'client_drive_link', label: 'client drive link', isFilter: false },
-    { key: 'clients_details', label: 'Client Details', isFilter: false },
+    // { key: 'clients_details', label: 'Client Details', isFilter: false },
+    { key: 'payment_drive_link', label: 'payment drive link', isFilter: false },
     { key: 'order_status', label: 'Record Status', isFilter: true }
 ];
-
+// console.log(dropdownOptions.bank_account_options)
 const ListEditor = ({ initialValue, onSave, onCancel }) => {
     const [items, setItems] = useState(() => {
         if (!initialValue) return [''];
@@ -89,7 +91,6 @@ const ListEditor = ({ initialValue, onSave, onCancel }) => {
     };
 
     const addItem = () => {
-        if (items.length >= 7) return;
         setItems([...items, '']);
     };
 
@@ -120,35 +121,36 @@ const ListEditor = ({ initialValue, onSave, onCancel }) => {
 
     return (
         <div style={{ padding: '8px', background: '#fff', border: '1px solid #ccc', borderRadius: '4px', minWidth: '300px', zIndex: 10 }}>
-            {items.map((item, index) => (
-                <div key={index} style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                    <input 
-                        type="text" 
-                        value={item} 
-                        onChange={(e) => handleItemChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        style={{ flex: 1, padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
-                        autoFocus={index === items.length - 1}
-                        placeholder="Enter item..."
-                    />
-                    <button onClick={() => removeItem(index)} style={{ padding: '6px 10px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
-                </div>
-            ))}
+            <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
+                {items.map((item, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => handleItemChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, index)}
+                            style={{ flex: 1, padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                            autoFocus={index === items.length - 1}
+                            placeholder="Enter item..."
+                        />
+                        <button onClick={() => removeItem(index)} style={{ padding: '6px 10px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
+                    </div>
+                ))}
+            </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <button 
-                    onClick={addItem} 
-                    disabled={items.length >= 7}
-                    style={{ 
-                        padding: '6px 10px', 
-                        background: items.length >= 7 ? '#ccc' : '#1890ff', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
-                        cursor: items.length >= 7 ? 'not-allowed' : 'pointer', 
-                        fontSize: '13px' 
+                <button
+                    onClick={addItem}
+                    style={{
+                        padding: '6px 10px',
+                        background: '#1890ff',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px'
                     }}
                 >
-                    + Add Item {items.length >= 7 && '(Max 7)'}
+                    + Add Item
                 </button>
                 <div style={{ flex: 1 }}></div>
                 <button onClick={handleSave} style={{ padding: '6px 12px', background: '#52c41a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Save</button>
@@ -159,13 +161,25 @@ const ListEditor = ({ initialValue, onSave, onCancel }) => {
 };
 
 export function Tablepage({ searchTerm }) {
+    const [contextMenu, setContextMenu] = useState(null);
+
+    const handleRightClick = (e, row, fieldName) => {
+        e.preventDefault();
+        setContextMenu({
+            collection: 'orders',
+            documentId: row.order_db_id,
+            fieldName: fieldName,
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
     const [tableData, setTableData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [editingCell, setEditingCell] = useState(null); // { rowIndex, fieldName }
     const [editValue, setEditValue] = useState('');
     const [phaseModal, setPhaseModal] = useState(null); // { phase, rowIndex, data: { payment, date, details } }
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
-    const [dropdownOptions, setDropdownOptions] = useState({ we_chats: [], employee_names: [], order_type_options: [], bank_account_options: [] });
+    const [dropdownOptions, setDropdownOptions] = useState({ we_chats: [], employee_names: [], order_type_options: [], bank_account_options: [], payment_method_options: [] });
     const [settingsOptions, setSettingsOptions] = useState({
         order_type: [],
         index: [],
@@ -212,12 +226,12 @@ export function Tablepage({ searchTerm }) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         if (draggedColIndex === null || draggedColIndex === index) return;
-        
+
         const newColumns = [...columns];
         const draggedItem = newColumns[draggedColIndex];
         newColumns.splice(draggedColIndex, 1);
         newColumns.splice(index, 0, draggedItem);
-        
+
         setDraggedColIndex(index);
         setColumns(newColumns);
         localStorage.setItem('tableColumnOrder', JSON.stringify(newColumns.map(c => c.key)));
@@ -260,10 +274,12 @@ export function Tablepage({ searchTerm }) {
                                 we_chats: data.detail.we_chats || [],
                                 employee_names: data.detail.employee_names || [],
                                 order_type_options: data.detail.order_type_options || [],
-                                bank_account_options: data.detail.bank_account_options || []
+                                bank_account_options: data.detail.bank_account_options || [],
+                                payment_method_options: data.detail.payment_method_options || []
                             });
                         }
                     }
+                    // console.log(data.detail.bank_account_options[0].account_number);
                 })
                 .catch(error => console.error(error));
         }
@@ -326,7 +342,8 @@ export function Tablepage({ searchTerm }) {
                     payment: tableData[rowIndex][`phase_${phase}_payment`] || '',
                     date: tableData[rowIndex][`phase_${phase}_payment_date`] || '',
                     details: tableData[rowIndex][`phase_${phase}_payment_details`] || '',
-                    receive_bank_account: tableData[rowIndex][`phase_${phase}_receive_bank_account`] || ''
+                    receive_bank_account: tableData[rowIndex][`phase_${phase}_receive_bank_account`] || '',
+                    payment_method: tableData[rowIndex][`phase_${phase}_payment_method`] || ''
                 }
             });
             return;
@@ -370,24 +387,24 @@ export function Tablepage({ searchTerm }) {
             finalPayment = parseFloat(finalPayment);
         }
 
+        const paymentMethodField = `phase_${phase}_payment_method`;
+
         const payload = {
             [paymentField]: finalPayment,
             [dateField]: data.date || null,
             [detailsField]: data.details || ''
         };
-        if (phase === 1) {
-            payload[bankAccountField] = data.receive_bank_account || '';
-            payload.receive_bank_account = data.receive_bank_account || '';
-        }
+        payload[bankAccountField] = data.receive_bank_account || '';
+        payload.receive_bank_account = data.receive_bank_account || '';
+        payload[paymentMethodField] = data.payment_method || '';
 
         const updatedTableData = [...tableData];
         updatedTableData[rowIndex][paymentField] = finalPayment;
         updatedTableData[rowIndex][dateField] = data.date;
         updatedTableData[rowIndex][detailsField] = data.details;
-        if (phase === 1) {
-            updatedTableData[rowIndex][bankAccountField] = data.receive_bank_account;
-            updatedTableData[rowIndex].receive_bank_account = data.receive_bank_account;
-        }
+        updatedTableData[rowIndex][bankAccountField] = data.receive_bank_account;
+        updatedTableData[rowIndex].receive_bank_account = data.receive_bank_account;
+        updatedTableData[rowIndex][paymentMethodField] = data.payment_method;
 
         const row = updatedTableData[rowIndex];
         const phase1 = parseFloat(row.phase_1_payment) || 0;
@@ -400,12 +417,6 @@ export function Tablepage({ searchTerm }) {
         if (newPaid >= totalAmt && totalAmt > 0) {
             updatedTableData[rowIndex].payment_status = 'Paid';
             payload.payment_status = 'Paid';
-        } else if (newPaid > 0) {
-            updatedTableData[rowIndex].payment_status = 'Partial';
-            payload.payment_status = 'Partial';
-        } else if (newPaid === 0) {
-            updatedTableData[rowIndex].payment_status = 'Pending';
-            payload.payment_status = 'Pending';
         }
 
         updatedTableData[rowIndex].paid_amount = newPaid;
@@ -485,6 +496,36 @@ export function Tablepage({ searchTerm }) {
             return;
         }
 
+        const datePairs = [
+            { start: 'writing_start_date', end: 'writing_end_date' },
+            { start: 'modification_start_date', end: 'modification_end_date' },
+            { start: 'implementation_start_date', end: 'implementation_end_date' },
+            { start: 'po_start_date', end: 'po_end_date' }
+        ];
+
+        for (const pair of datePairs) {
+            if (fieldName === pair.start || fieldName === pair.end) {
+                const startDateStr = fieldName === pair.start ? finalEditValue : tableData[rowIndex][pair.start];
+                const endDateStr = fieldName === pair.end ? finalEditValue : tableData[rowIndex][pair.end];
+
+                if (startDateStr && endDateStr) {
+                    const startDate = new Date(startDateStr);
+                    const endDate = new Date(endDateStr);
+                    if (!isNaN(startDate) && !isNaN(endDate)) {
+                        startDate.setHours(0, 0, 0, 0);
+                        endDate.setHours(0, 0, 0, 0);
+
+                        if (startDate >= endDate) {
+                            const formatName = (str) => str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                            showNotification(`${formatName(pair.start)} cannot be greater than or equal to ${formatName(pair.end)}`, "error");
+                            setEditingCell(null);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
         // Optimistic update
         const updatedTableData = [...tableData];
         updatedTableData[rowIndex][fieldName] = finalEditValue;
@@ -497,7 +538,8 @@ export function Tablepage({ searchTerm }) {
             const writing = parseFloat(row.writing_amount) || 0;
             const modification = parseFloat(row.modification_amount) || 0;
             const po = parseFloat(row.po_amount) || 0;
-            const newTotal = writing + modification + po;
+            const implementation = parseFloat(row.implementation_amount) || 0;
+            const newTotal = writing + modification + po + implementation;
 
             updatedTableData[rowIndex].total_amount = newTotal;
             payload.total_amount = newTotal;
@@ -517,12 +559,6 @@ export function Tablepage({ searchTerm }) {
         if (newPaid >= totalAmt && totalAmt > 0) {
             updatedTableData[rowIndex].payment_status = 'Paid';
             payload.payment_status = 'Paid';
-        } else if (newPaid > 0) {
-            updatedTableData[rowIndex].payment_status = 'Partial';
-            payload.payment_status = 'Partial';
-        } else if (newPaid === 0) {
-            updatedTableData[rowIndex].payment_status = 'Pending';
-            payload.payment_status = 'Pending';
         }
 
         setTableData(updatedTableData);
@@ -593,7 +629,7 @@ export function Tablepage({ searchTerm }) {
 
     // Fields that should never be editable inline
     const userRole = localStorage.getItem('user_role');
-    const readOnlyArray = ['total_amount', 'paid_amount', 'client_id', 'client_Email', 'client_country', 'client_whatsapp_number', 'ref_no','receive_bank_account'];
+    const readOnlyArray = ['total_amount', 'paid_amount', 'client_id', 'client_Email', 'client_country', 'client_whatsapp_number', 'ref_no', 'receive_bank_account', 'paid_amount_usd'];
     if (userRole !== 'admin' && userRole !== 'manager') {
         readOnlyArray.push('client_handler_name');
     }
@@ -652,11 +688,20 @@ export function Tablepage({ searchTerm }) {
     };
 
     const renderCell = (row, rowIndex, fieldName, displayValue) => {
+        // Helper: safely convert a value to a renderable string (handles objects)
+        const safeDisplay = (val) => {
+            if (val === null || val === undefined) return 'N/A';
+            if (typeof val === 'object') return val.account_number || JSON.stringify(val);
+            return val;
+        };
+
         // Read-only: just show the value, no double-click editing
         if (READ_ONLY_FIELDS.has(fieldName)) {
             return (
-                <td key={fieldName} style={{ cursor: 'default', userSelect: 'text' }} title="Read-only field" data-field={fieldName}>
-                    {displayValue ?? row[fieldName] ?? 'N/A'}
+                <td key={fieldName} style={{ cursor: 'default', userSelect: 'text' }} title="Read-only field" data-field={fieldName}
+                    onContextMenu={(e) => handleRightClick(e, row, fieldName)}
+                >
+                    {safeDisplay(displayValue ?? row[fieldName])}
                 </td>
             );
         }
@@ -665,7 +710,7 @@ export function Tablepage({ searchTerm }) {
         const dateFields = [
             'order_date', 'writing_start_date', 'writing_end_date', 'modification_start_date',
             'modification_end_date', 'po_start_date', 'po_end_date', 'phase_1_payment_date',
-            'phase_2_payment_date', 'phase_3_payment_date'
+            'phase_2_payment_date', 'phase_3_payment_date', 'implementation_start_date', 'implementation_end_date'
         ];
 
         const dropdownFields = {
@@ -678,12 +723,12 @@ export function Tablepage({ searchTerm }) {
             is_new_order: ['YES', 'NO'],
             we_chat: dropdownOptions.we_chats || [],
             client_handler_name: dropdownOptions.employee_names || [],
-            
+
         };
 
-        const textareaFields = ['client_affiliations', 'remarks', 'title', 'journal_name'];
-        const plainTextareaFields = [];
-        const linkFields = ['client_drive_link', 'clients_details'];
+        const textareaFields = ['journal_name', 'client_affiliations', 'remarks'];
+        const plainTextareaFields = ['title'];
+        const linkFields = ['client_drive_link', 'payment_drive_link'];
 
         // --- Status Badge renderer ---
         const getOrderStatusBadge = (value) => {
@@ -770,7 +815,11 @@ export function Tablepage({ searchTerm }) {
         };
 
         return (
-            <td key={fieldName} onDoubleClick={() => handleDoubleClick(rowIndex, fieldName, row[fieldName])} data-field={fieldName}>
+            <td key={fieldName} 
+                onDoubleClick={() => handleDoubleClick(rowIndex, fieldName, row[fieldName])} 
+                onContextMenu={(e) => handleRightClick(e, row, fieldName)}
+                data-field={fieldName}
+            >
                 {isEditing ? (
                     dateFields.includes(fieldName) ? (
                         <DatePicker
@@ -788,7 +837,11 @@ export function Tablepage({ searchTerm }) {
                     ) : dropdownFields[fieldName] ? (
                         <select
                             value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setEditValue(val);
+                                saveChanges(val);
+                            }}
                             onBlur={handleBlur}
                             onKeyDown={handleKeyDown}
                             autoFocus
@@ -853,7 +906,7 @@ export function Tablepage({ searchTerm }) {
                         {displayValue || row[fieldName] || 'N/A'}
                     </div>
                 ) : plainTextareaFields.includes(fieldName) ? (
-                    <div style={{padding:'3px', whiteSpace: 'pre-wrap', lineHeight: '1.6', maxHeight: '110px', overflowY: 'auto' }}>
+                    <div style={{ padding: '3px', whiteSpace: 'pre-wrap', lineHeight: '1.6', maxHeight: '110px', overflowY: 'auto' }}>
                         {row[fieldName]
                             ? row[fieldName].split('\n').map((line, i) => (
                                 <div key={i}>{line || '\u00A0'}</div>
@@ -1050,11 +1103,11 @@ export function Tablepage({ searchTerm }) {
                                         style: { cursor: 'grab' },
                                         'data-field': col.key
                                     };
-                                    
+
                                     if (col.isFilter) {
                                         return <FilterHeader key={col.key} label={col.label} field={col.key} dragProps={dragProps} />;
                                     }
-                                    
+
                                     return (
                                         <th key={col.key} {...dragProps}>
                                             {col.label}
@@ -1072,17 +1125,17 @@ export function Tablepage({ searchTerm }) {
                                     <tr key={startIndex + index}>
                                         <td>{startIndex + index + 1}</td>
                                         {renderCell(row, actualIndex, 'client_id')}
-                                        
+
                                         {columns.map((col) => {
                                             if (col.key === 'paid_amount') {
                                                 return (
                                                     <td key={col.key} data-field="paid_amount">
                                                         Paid Amount : {row.paid_amount}<br />
-                                                        Pending Amount : {row.total_amount-row.paid_amount}
+                                                        Pending Amount : {row.total_amount - row.paid_amount}
                                                     </td>
                                                 );
                                             }
-                                            
+
                                             const isDate = col.key.includes('date');
                                             const displayValue = isDate ? formatDate(row[col.key]) : undefined;
                                             return renderCell(row, actualIndex, col.key, displayValue);
@@ -1143,22 +1196,37 @@ export function Tablepage({ searchTerm }) {
                                     required
                                 />
                             </div>
-                            {phaseModal.phase === 1 && (
-                                <div className={Style.modalInputGroup}>
-                                    <label>Receiver Bank Account</label>
-                                    <select
-                                        value={phaseModal.data.receive_bank_account}
-                                        onChange={(e) => handlePhaseModalChange('receive_bank_account', e.target.value)}
-                                        className={Style.editInput}
-                                        required
-                                    >
-                                        <option value="">Select Receiver Bank Account</option>
-                                        {dropdownOptions.bank_account_options.map(acc => (
-                                            <option key={acc} value={acc}>{acc}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                            <div className={Style.modalInputGroup}>
+                                <label>Receiver Bank Account</label>
+                                <select
+                                    value={phaseModal.data.receive_bank_account}
+                                    onChange={(e) => handlePhaseModalChange('receive_bank_account', e.target.value)}
+                                    className={Style.editInput}
+                                    required
+                                >
+                                    <option value="">Select Receiver Bank Account</option>
+                                    {dropdownOptions.bank_account_options.map((acc, i) => {
+                                        const displayStr = typeof acc === 'object' ? `${acc.bank_name || 'Bank'} - ${acc.account_number || 'N/A'}` : acc;
+                                        return <option key={i} value={displayStr}>{displayStr}</option>;
+                                    })}
+                                </select>
+                            </div>
+                            <div className={Style.modalInputGroup}>
+                                <label>Payment Method</label>
+                                <select
+                                    value={phaseModal.data.payment_method}
+                                    onChange={(e) => handlePhaseModalChange('payment_method', e.target.value)}
+                                    className={Style.editInput}
+                                    required
+                                >
+                                    <option value="">Select Payment Method</option>
+                                    {dropdownOptions.payment_method_options.map((method, i) => {
+                                        const methodStr = typeof method === 'object' && method !== null ? JSON.stringify(method) : method;
+                                        return <option key={i} value={methodStr}>{methodStr}</option>;
+                                    })}
+                                </select>
+                            </div>
+                            
                             <div className={Style.modalFooter}>
                                 <button type="button" className={Style.cancelBtn} onClick={() => setPhaseModal(null)}>Cancel</button>
                                 <button type="submit" className={Style.submitBtn}>Update</button>
@@ -1166,6 +1234,16 @@ export function Tablepage({ searchTerm }) {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {contextMenu && (
+                <HistoryContextMenu
+                    collection={contextMenu.collection}
+                    documentId={contextMenu.documentId}
+                    fieldName={contextMenu.fieldName}
+                    position={contextMenu.position}
+                    onClose={() => setContextMenu(null)}
+                />
             )}
         </div>
     );

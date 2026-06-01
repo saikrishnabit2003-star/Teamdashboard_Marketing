@@ -7,7 +7,8 @@ const initialData = {
     order_type: [],
     index: [],
     rank: [],
-    bank_account: []
+    bank_account: [],
+    payment_method:[]
 };
 
 export function Lookup() {
@@ -55,20 +56,30 @@ export function Lookup() {
         setActiveTab(tab);
         setEditingIndex(null);
         setShowAddForm(false);
-        setNewValue("");
+        setNewValue(tab === 'bank_account' ? { bank_name: '', account_number: '', ifsc_code: '', handler_name: '' } : "");
     };
 
     const handleEdit = (index, value) => {
         setEditingIndex(index);
-        setEditValue(value);
+        setEditValue(activeTab === 'bank_account' && typeof value === 'object' ? { ...value } : value);
     };
 
     const handleSave = async (index) => {
-        const newOpt = editValue.trim();
         const oldOpt = data[activeTab][index];
-        if (!newOpt) {
-            showNotification("Value cannot be empty", "error");
-            return;
+        let newOpt;
+
+        if (activeTab === 'bank_account') {
+            newOpt = { ...editValue };
+            if (!newOpt.bank_name || !newOpt.account_number) {
+                showNotification("Bank Name and Account Number are required", "error");
+                return;
+            }
+        } else {
+            newOpt = editValue.trim();
+            if (!newOpt) {
+                showNotification("Value cannot be empty", "error");
+                return;
+            }
         }
         
         try {
@@ -119,14 +130,24 @@ export function Lookup() {
     };
 
     const handleAdd = async () => {
-        const newOpt = newValue.trim();
-        if (!newOpt) {
-            showNotification("Value cannot be empty", "error");
-            return;
+        let newOpt;
+
+        if (activeTab === 'bank_account') {
+            newOpt = { ...newValue };
+            if (!newOpt.bank_name || !newOpt.account_number) {
+                showNotification("Bank Name and Account Number are required", "error");
+                return;
+            }
+        } else {
+            newOpt = newValue.trim();
+            if (!newOpt) {
+                showNotification("Value cannot be empty", "error");
+                return;
+            }
         }
 
         const currentList = data[activeTab] || [];
-        if (currentList.some(item => item.toLowerCase() === newOpt.toLowerCase())) {
+        if (typeof newOpt === 'string' && currentList.some(item => typeof item === 'string' && item.toLowerCase() === newOpt.toLowerCase())) {
             showNotification("This option already exists", "error");
             return;
         }
@@ -143,7 +164,7 @@ export function Lookup() {
             const result = await res.json();
             if (res.ok) {
                 showNotification("Option added successfully", "success");
-                setNewValue("");
+                setNewValue(activeTab === 'bank_account' ? { bank_name: '', account_number: '', ifsc_code: '', handler_name: '' } : "");
                 setShowAddForm(false);
                 fetchSettings();
             } else {
@@ -190,7 +211,7 @@ export function Lookup() {
                             className={styles.addBtn}
                             onClick={() => {
                                 setShowAddForm(!showAddForm);
-                                setNewValue("");
+                                setNewValue(activeTab === 'bank_account' ? { bank_name: '', account_number: '', ifsc_code: '', handler_name: '' } : "");
                             }}
                         >
                             {showAddForm ? 'Cancel' : '+ Add New Option'}
@@ -199,15 +220,24 @@ export function Lookup() {
 
                     {showAddForm && (
                         <div className={styles.addForm}>
-                            <input 
-                                type="text"
-                                className={styles.addInput}
-                                value={newValue}
-                                onChange={(e) => setNewValue(e.target.value)}
-                                placeholder="Enter new option value..."
-                                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                                autoFocus
-                            />
+                            {activeTab === 'bank_account' ? (
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px', width: '100%' }}>
+                                    <input type="text" className={styles.addInput} style={{ flex: '1 1 200px' }} placeholder="Bank Name" value={newValue.bank_name || ''} onChange={(e) => setNewValue({...newValue, bank_name: e.target.value})} />
+                                    <input type="text" className={styles.addInput} style={{ flex: '1 1 200px' }} placeholder="Account Number" value={newValue.account_number || ''} onChange={(e) => setNewValue({...newValue, account_number: e.target.value})} />
+                                    <input type="text" className={styles.addInput} style={{ flex: '1 1 200px' }} placeholder="IFSC Code" value={newValue.ifsc_code || ''} onChange={(e) => setNewValue({...newValue, ifsc_code: e.target.value})} />
+                                    <input type="text" className={styles.addInput} style={{ flex: '1 1 200px' }} placeholder="Handler Name" value={newValue.handler_name || ''} onChange={(e) => setNewValue({...newValue, handler_name: e.target.value})} />
+                                </div>
+                            ) : (
+                                <input 
+                                    type="text"
+                                    className={styles.addInput}
+                                    value={newValue}
+                                    onChange={(e) => setNewValue(e.target.value)}
+                                    placeholder="Enter new option value..."
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                                    autoFocus
+                                />
+                            )}
                             <button className={styles.saveBtn} onClick={handleAdd}>Save</button>
                         </div>
                     )}
@@ -232,17 +262,33 @@ export function Lookup() {
                                             <td>{index + 1}</td>
                                             <td>
                                                 {editingIndex === index ? (
-                                                    <input 
-                                                        type="text"
-                                                        className={styles.editInput}
-                                                        value={editValue}
-                                                        onChange={(e) => setEditValue(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') handleSave(index);
-                                                            if (e.key === 'Escape') setEditingIndex(null);
-                                                        }}
-                                                        autoFocus
-                                                    />
+                                                    activeTab === 'bank_account' ? (
+                                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+                                                            <input type="text" className={styles.editInput} style={{ flex: '1 1 120px' }} placeholder="Bank Name" value={editValue.bank_name || ''} onChange={(e) => setEditValue({...editValue, bank_name: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') handleSave(index); if (e.key === 'Escape') setEditingIndex(null); }} />
+                                                            <input type="text" className={styles.editInput} style={{ flex: '1 1 120px' }} placeholder="Account Number" value={editValue.account_number || ''} onChange={(e) => setEditValue({...editValue, account_number: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') handleSave(index); if (e.key === 'Escape') setEditingIndex(null); }} />
+                                                            <input type="text" className={styles.editInput} style={{ flex: '1 1 120px' }} placeholder="IFSC Code" value={editValue.ifsc_code || ''} onChange={(e) => setEditValue({...editValue, ifsc_code: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') handleSave(index); if (e.key === 'Escape') setEditingIndex(null); }} />
+                                                            <input type="text" className={styles.editInput} style={{ flex: '1 1 120px' }} placeholder="Handler Name" value={editValue.handler_name || ''} onChange={(e) => setEditValue({...editValue, handler_name: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') handleSave(index); if (e.key === 'Escape') setEditingIndex(null); }} />
+                                                        </div>
+                                                    ) : (
+                                                        <input 
+                                                            type="text"
+                                                            className={styles.editInput}
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') handleSave(index);
+                                                                if (e.key === 'Escape') setEditingIndex(null);
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                    )
+                                                ) : typeof item === 'object' && item !== null ? (
+                                                    <div style={{ lineHeight: '1.7', fontSize: '13px' }}>
+                                                        {item.bank_name && <div><b>Bank Name:</b> {item.bank_name}</div>}
+                                                        {item.account_number && <div><b>Account No:</b> {item.account_number}</div>}
+                                                        {item.ifsc_code && <div><b>IFSC Code:</b> {item.ifsc_code}</div>}
+                                                        {item.handler_name && <div><b>Handler:</b> {item.handler_name}</div>}
+                                                    </div>
                                                 ) : (
                                                     item
                                                 )}

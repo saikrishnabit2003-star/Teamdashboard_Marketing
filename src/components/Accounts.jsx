@@ -6,8 +6,21 @@ import { AdminForm } from "./AdminForm";
 import { BASE_URL } from '../config';
 import { CloudCog } from "lucide-react";
 import imageCompression from 'browser-image-compression';
+import HistoryContextMenu from './HistoryContextMenu';
 
 export function Accounts({ searchTerm }) {
+    const [contextMenu, setContextMenu] = useState(null);
+
+    const handleRightClick = (e, client, fieldName) => {
+        e.preventDefault();
+        setContextMenu({
+            collection: 'clients',
+            documentId: client.client_id,
+            fieldName: fieldName,
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
     const [testphoto, setTestPhoto] = useState("");
     const [activeTab, setActiveTab] = useState("client");
     const [selectedImage, setSelectedImage] = useState(null);
@@ -207,7 +220,9 @@ export function Accounts({ searchTerm }) {
         }
 
         return (
-            <td onDoubleClick={() => handleClientDoubleClick(client, fieldName, client[fieldName])} style={{ cursor: 'pointer' }}>
+            <td onDoubleClick={() => handleClientDoubleClick(client, fieldName, client[fieldName])} 
+                onContextMenu={(e) => handleRightClick(e, client, fieldName)}
+                style={{ cursor: 'pointer' }}>
                 {value}
             </td>
         );
@@ -922,7 +937,24 @@ export function Accounts({ searchTerm }) {
                                                 <div className={styles.tooltipContainer}>
                                                     <span className={styles.ordersBadge}>{client.total_orders}</span>
                                                     <div className={styles.tooltipContent}>
-                                                        {client.order_type ? String(client.order_type).split(',').map(s => s.trim()).filter(Boolean).join('\n') : "No Orders"}
+                                                        {(() => {
+                                                            if (!client.order_type) return "No Orders";
+                                                            const items = String(client.order_type).split(',').map(s => s.trim()).filter(Boolean);
+                                                            const totalOrders = Number(client.total_orders) || items.length;
+                                                            // If only one unique order type, use total_orders as the count
+                                                            const uniqueTypes = [...new Set(items)];
+                                                            if (uniqueTypes.length === 1) {
+                                                                return totalOrders > 1
+                                                                    ? `1. ${uniqueTypes[0]} - ${totalOrders}`
+                                                                    : `1. ${uniqueTypes[0]}`;
+                                                            }
+                                                            // Multiple different order types — count occurrences from comma list
+                                                            const counts = {};
+                                                            items.forEach(item => { counts[item] = (counts[item] || 0) + 1; });
+                                                            return Object.entries(counts)
+                                                                .map(([val, count], i) => count > 1 ? `${i + 1}. ${val} - ${count}` : `${i + 1}. ${val}`)
+                                                                .join('\n');
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </td>
@@ -942,16 +974,16 @@ export function Accounts({ searchTerm }) {
                                                     <div style={{ display: 'flex', gap: '4px' }}>
                                                         <label style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#e2e8f0', borderRadius: '4px' }} title="Update Photo">
                                                             <CloudCog size={12} />
-                                                            <input 
-                                                                type="file" 
-                                                                accept="image/jpeg, image/jpg" 
-                                                                style={{ display: 'none' }} 
-                                                                onChange={(e) => handleClientPhotoUpload(client.client_id, e.target.files[0])} 
+                                                            <input
+                                                                type="file"
+                                                                accept="image/jpeg, image/jpg"
+                                                                style={{ display: 'none' }}
+                                                                onChange={(e) => handleClientPhotoUpload(client.client_id, e.target.files[0])}
                                                             />
                                                         </label>
                                                         {client.photo_url && (
-                                                            <button 
-                                                                onClick={() => handleClientPhotoDelete(client.client_id)} 
+                                                            <button
+                                                                onClick={() => handleClientPhotoDelete(client.client_id)}
                                                                 style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px' }}
                                                                 title="Remove Photo"
                                                             >
@@ -994,14 +1026,14 @@ export function Accounts({ searchTerm }) {
                             </thead>
                             <tbody>
                                 {empLoading ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '16px' }}>Loading...</td></tr>
+                                    <tr><td colSpan={11} style={{ textAlign: 'center', padding: '16px' }}>Loading...</td></tr>
                                 ) : empData.filter(e => {
                                     if (!searchTerm) return true;
                                     return Object.values(e).some(val =>
                                         String(val).toLowerCase().includes(searchTerm.toLowerCase())
                                     );
                                 }).length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '16px' }}>No employees found.</td></tr>
+                                    <tr><td colSpan={11} style={{ textAlign: 'center', padding: '16px' }}>No employees found.</td></tr>
                                 ) : empData
                                     .filter(e => {
                                         if (!searchTerm) return true;
@@ -1058,16 +1090,16 @@ export function Accounts({ searchTerm }) {
                                                     <div style={{ display: 'flex', gap: '4px' }}>
                                                         <label style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#e2e8f0', borderRadius: '4px' }} title="Update Photo">
                                                             <CloudCog size={12} />
-                                                            <input 
-                                                                type="file" 
-                                                                accept="image/jpeg, image/jpg" 
-                                                                style={{ display: 'none' }} 
-                                                                onChange={(ev) => handleEmployeePhotoUpload(e.email, ev.target.files[0])} 
+                                                            <input
+                                                                type="file"
+                                                                accept="image/jpeg, image/jpg"
+                                                                style={{ display: 'none' }}
+                                                                onChange={(ev) => handleEmployeePhotoUpload(e.email, ev.target.files[0])}
                                                             />
                                                         </label>
                                                         {(e.photo_url || e.photo) && (
-                                                            <button 
-                                                                onClick={() => handleEmployeePhotoDelete(e.email)} 
+                                                            <button
+                                                                onClick={() => handleEmployeePhotoDelete(e.email)}
                                                                 style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px' }}
                                                                 title="Remove Photo"
                                                             >
@@ -1145,6 +1177,16 @@ export function Accounts({ searchTerm }) {
                         <button onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: '-15px', right: '-15px', background: '#ef4444', color: 'white', border: 'none', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>✕</button>
                     </div>
                 </div>
+            )}
+
+            {contextMenu && (
+                <HistoryContextMenu
+                    collection={contextMenu.collection}
+                    documentId={contextMenu.documentId}
+                    fieldName={contextMenu.fieldName}
+                    position={contextMenu.position}
+                    onClose={() => setContextMenu(null)}
+                />
             )}
         </div>
     );

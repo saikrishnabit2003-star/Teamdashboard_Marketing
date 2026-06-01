@@ -321,6 +321,9 @@ export function History({ searchTerm = '' }) {
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_1_receive_bank_account || 'N/A'}
                                         </p>
+                                        <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
+                                            <strong>Method:</strong> {record.phase_1_payment_method || 'N/A'}
+                                        </p>
                                     </div>
 
                                     {/* Phase 2 */}
@@ -341,6 +344,9 @@ export function History({ searchTerm = '' }) {
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_2_receive_bank_account || 'N/A'}
                                         </p>
+                                        <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
+                                            <strong>Method:</strong> {record.phase_2_payment_method || 'N/A'}
+                                        </p>
                                     </div>
 
                                     {/* Phase 3 */}
@@ -360,6 +366,9 @@ export function History({ searchTerm = '' }) {
                                         </p>
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_3_receive_bank_account || 'N/A'}
+                                        </p>
+                                        <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
+                                            <strong>Method:</strong> {record.phase_3_payment_method || 'N/A'}
                                         </p>
                                     </div>
                                 </div>
