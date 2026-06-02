@@ -73,6 +73,18 @@ export function Accounts({ searchTerm }) {
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
 
+    // --- Row selection & action state ---
+    const [selectedClientRows, setSelectedClientRows] = useState(new Set());
+    const [clientDeleteConfirm, setClientDeleteConfirm] = useState(null);
+    const [editClientModal, setEditClientModal] = useState(null);
+    const [editClientData, setEditClientData] = useState({});
+
+    // --- Column filters ---
+    const [clientFilters, setClientFilters] = useState({
+        client_id: '', name: '', country: '', client_handler_name: '', bank_account: ''
+    });
+    const [activeClientFilter, setActiveClientFilter] = useState(null);
+
     const showNotification = (message, type) => {
         setNotification({ message, type, visible: true });
         setTimeout(() => {
@@ -122,15 +134,15 @@ export function Accounts({ searchTerm }) {
         // Map frontend fields to backend order fields so it matches Tablepage API expectations
         const payload = {};
         if (fieldName === 'client_id') {
-            payload.client_id = editClientValue;
+            payload.client_id = editClientValue.toUpperCase();
         }
         if (fieldName === 'name') {
-            payload.client_name = editClientValue;
-            payload.name = editClientValue;
+            payload.client_name = editClientValue.toUpperCase();
+            payload.name = editClientValue.toUpperCase();
         }
         if (fieldName === 'country') {
-            payload.client_country = editClientValue;
-            payload.country = editClientValue;
+            payload.client_country = editClientValue.toUpperCase();
+            payload.country = editClientValue.toUpperCase();
         }
         if (fieldName === 'email') {
             payload.client_Email = editClientValue;
@@ -143,16 +155,16 @@ export function Accounts({ searchTerm }) {
             payload.whatsapp_no = editClientValue;
         }
         if (fieldName === 'client_handler_name') {
-            payload.client_handler_name = editClientValue;
-            payload.client_handler = editClientValue;
+            payload.client_handler_name = editClientValue.toUpperCase();
+            payload.client_handler = editClientValue.toUpperCase();
         }
         if (fieldName === 'client_ref_no') {
-            payload.ref_no = editClientValue;
-            payload.client_ref_no = editClientValue;
+            payload.ref_no = editClientValue.toUpperCase();
+            payload.client_ref_no = editClientValue.toUpperCase();
         }
         if (fieldName === 'bank_account') {
-            payload.bank_account = editClientValue;
-            payload.client_bank_account = editClientValue;
+            payload.bank_account = editClientValue.toUpperCase();
+            payload.client_bank_account = editClientValue.toUpperCase();
         }
 
         try {
@@ -177,6 +189,92 @@ export function Accounts({ searchTerm }) {
             showNotification("Error connecting to server", "error");
             fetchClients();
         }
+    };
+
+    // --- Client row selection helpers ---
+    const toggleSelectClientRow = (id) => {
+        setSelectedClientRows(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAllClients = (currentRows) => {
+        const allSelected = currentRows.every(c => selectedClientRows.has(c.client_id));
+        if (allSelected) {
+            setSelectedClientRows(prev => { const n = new Set(prev); currentRows.forEach(c => n.delete(c.client_id)); return n; });
+        } else {
+            setSelectedClientRows(prev => { const n = new Set(prev); currentRows.forEach(c => n.add(c.client_id)); return n; });
+        }
+    };
+
+    const handleDeleteClient = async (client) => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`${BASE_URL}/clients/${client.client_id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setSampleData(prev => prev.filter(c => c.client_id !== client.client_id));
+                setSelectedClientRows(prev => { const n = new Set(prev); n.delete(client.client_id); return n; });
+                showNotification('Client deleted successfully', 'success');
+            } else { showNotification('Failed to delete client', 'error'); }
+        } catch { showNotification('Error connecting to server', 'error'); }
+        setClientDeleteConfirm(null);
+    };
+
+    const handleBulkDeleteClients = async () => {
+        const token = localStorage.getItem('token');
+        let count = 0;
+        for (const id of [...selectedClientRows]) {
+            try {
+                const res = await fetch(`${BASE_URL}/clients/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) count++;
+            } catch {}
+        }
+        setSampleData(prev => prev.filter(c => !selectedClientRows.has(c.client_id)));
+        setSelectedClientRows(new Set());
+        showNotification(`${count} client(s) deleted`, 'success');
+        setClientDeleteConfirm(null);
+    };
+
+    const handleEditClientOpen = (client) => {
+        setEditClientModal({ clientId: client.client_id });
+        setEditClientData({ ...client });
+    };
+
+    const submitEditClient = async (e) => {
+        e.preventDefault();
+        if (!editClientModal) return;
+        const token = localStorage.getItem('token');
+        const { clientId } = editClientModal;
+        const clientIndex = sampleData.findIndex(c => c.client_id === clientId);
+        const order_db_id = sampleData[clientIndex]?.order_id_db?.[0] || clientId;
+        try {
+            const res = await fetch(`${BASE_URL}/dashboard/orders/${order_db_id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    client_name: editClientData.name,
+                    client_country: editClientData.country,
+                    client_Email: editClientData.email,
+                    client_whatsapp_number: editClientData.whatsapp_no,
+                    client_handler_name: editClientData.client_handler_name,
+                    bank_account: editClientData.bank_account,
+                    client_ref_no: editClientData.client_ref_no,
+                })
+            });
+            if (res.ok) {
+                const updated = [...sampleData];
+                updated[clientIndex] = { ...updated[clientIndex], ...editClientData };
+                setSampleData(updated);
+                showNotification('Client updated successfully', 'success');
+            } else { showNotification('Failed to update client', 'error'); }
+        } catch { showNotification('Error connecting to server', 'error'); }
+        setEditClientModal(null);
+        setEditClientData({});
     };
 
     const renderClientCell = (client, fieldName, displayValue) => {
@@ -753,6 +851,59 @@ export function Accounts({ searchTerm }) {
         }
     };
 
+    // Close filter dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (activeClientFilter && !e.target.closest(`.${styles.filterTh}`)) {
+                setActiveClientFilter(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [activeClientFilter]);
+
+    // Excel-style filter header for client table
+    const ClientFilterHeader = ({ label, field }) => {
+        const uniqueValues = [...new Set(sampleData.map(c => String(c[field] || '').trim()).filter(Boolean))].sort();
+        const isOpen = activeClientFilter === field;
+        const hasFilter = !!clientFilters[field];
+        return (
+            <th className={styles.filterTh}>
+                <div className={styles.filterHeaderContent}>
+                    <span>{label}</span>
+                    <button
+                        className={`${styles.filterIcon} ${hasFilter ? styles.activeFilter : ''}`}
+                        onClick={e => { e.stopPropagation(); setActiveClientFilter(isOpen ? null : field); }}
+                        title={hasFilter ? `Filtered: ${clientFilters[field]}` : 'Filter'}
+                    >
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                        </svg>
+                    </button>
+                </div>
+                {isOpen && (
+                    <div className={styles.filterDropdown}>
+                        <div
+                            className={`${styles.filterOption} ${!clientFilters[field] ? styles.selectedOption : ''}`}
+                            onClick={() => { setClientFilters(p => ({ ...p, [field]: '' })); setActiveClientFilter(null); }}
+                        >
+                            All
+                        </div>
+                        {uniqueValues.map(val => (
+                            <div
+                                key={val}
+                                className={`${styles.filterOption} ${clientFilters[field] === val ? styles.selectedOption : ''}`}
+                                onClick={() => { setClientFilters(p => ({ ...p, [field]: val })); setActiveClientFilter(null); }}
+                            >
+                                {val}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </th>
+        );
+    };
+
     const userRole = localStorage.getItem('user_role') || '';
 
     return (
@@ -878,43 +1029,73 @@ export function Accounts({ searchTerm }) {
                         <button type="button" onClick={() => openAddPopup('client')}>Add Client</button>
                     </div> */}
                     <div className={styles.subcontainer2}>
+                        {(selectedClientRows.size > 0 || Object.values(clientFilters).some(f => f !== '')) && (
+                            <div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {selectedClientRows.size > 0 && (
+                                    <button className={styles.bulkDeleteBtn} onClick={() => setClientDeleteConfirm({ type: 'bulk' })}>
+                                        🗑 Delete Selected ({selectedClientRows.size})
+                                    </button>
+                                )}
+                                {Object.values(clientFilters).some(f => f !== '') && (
+                                    <button className={styles.bulkDeleteBtn}
+                                        style={{ borderColor: '#6b7280', color: '#6b7280', background: 'rgba(107,114,128,0.06)' }}
+                                        onClick={() => setClientFilters({ client_id: '', name: '', country: '', client_handler_name: '', bank_account: '' })}>
+                                        ✕ Clear Filters
+                                    </button>
+                                )}
+                            </div>
+                        )}
                         <table>
                             <thead>
                                 <tr>
+                                    <th className={styles.checkboxTh}>
+                                        <input type="checkbox" className={styles.rowCheckbox}
+                                            checked={sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).length > 0 &&
+                                                sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).every(c => selectedClientRows.has(c.client_id))}
+                                            onChange={() => toggleSelectAllClients(sampleData.filter(c =>
+                                                (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)))}
+                                        />
+                                    </th>
                                     <th>S.no</th>
-                                    <th>Client ID</th>
-                                    <th>Client Name</th>
-                                    <th>Location</th>
+                                    <ClientFilterHeader label="Client ID" field="client_id" />
+                                    <ClientFilterHeader label="Client Name" field="name" />
+                                    <ClientFilterHeader label="Location" field="country" />
                                     <th>Email</th>
                                     <th>Whatsapp</th>
-                                    <th>Client Handler</th>
-                                    {/* <th>Client Ref no</th> */}
-                                    {/* <th>Link</th> */}
-                                    <th>Bank account</th>
-                                    {/* <th>Order type</th> */}
+                                    <ClientFilterHeader label="Client Handler" field="client_handler_name" />
+                                    <ClientFilterHeader label="Client Acc No" field="bank_account" />
                                     <th>Orders</th>
-                                    <th>photo</th>
+                                    <th>Photo</th>
+                                    <th className={styles.actionTh}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: '16px' }}>Loading...</td></tr>
-                                ) : sampleData.filter(client => {
-                                    if (!searchTerm) return true;
-                                    return Object.values(client).some(val =>
-                                        String(val).toLowerCase().includes(searchTerm.toLowerCase())
+                                    <tr><td colSpan={12} style={{ textAlign: 'center', padding: '16px' }}>Loading...</td></tr>
+                                ) : (() => {
+                                    const filtered = sampleData.filter(client => {
+                                        const matchSearch = !searchTerm || Object.values(client).some(val =>
+                                            String(val).toLowerCase().includes(searchTerm.toLowerCase()));
+                                        const matchFilters = Object.entries(clientFilters).every(([field, val]) =>
+                                            !val || String(client[field] || '').trim() === val);
+                                        return matchSearch && matchFilters;
+                                    });
+                                    if (filtered.length === 0) return (
+                                        <tr><td colSpan={12} style={{ textAlign: 'center', padding: '16px' }}>No clients found.</td></tr>
                                     );
-                                }).length === 0 ? (
-                                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: '16px' }}>No clients found.</td></tr>
-                                ) : sampleData
-                                    .filter(client => {
-                                        if (!searchTerm) return true;
-                                        return Object.values(client).some(val =>
-                                            String(val).toLowerCase().includes(searchTerm.toLowerCase())
-                                        );
-                                    })
-                                    .map((client, index) => (
-                                        <tr key={client._id || client.client_id}>
+                                    return filtered.map((client, index) => {
+                                        const isClientSelected = selectedClientRows.has(client.client_id);
+                                        return (
+                                        <tr key={client._id || client.client_id} className={isClientSelected ? styles.selectedRow : ''}>
+                                            <td className={styles.checkboxTd}>
+                                                <input type="checkbox" className={styles.rowCheckbox}
+                                                    checked={isClientSelected}
+                                                    onChange={() => toggleSelectClientRow(client.client_id)}
+                                                />
+                                            </td>
                                             <td>{index + 1}</td>
                                             {renderClientCell(client, 'client_id', <span className={styles.clientIdBadge}>{client.client_id}</span>)}
                                             {renderClientCell(client, 'name', <span className={styles.clientNameCell}>{client.name}</span>)}
@@ -922,17 +1103,7 @@ export function Accounts({ searchTerm }) {
                                             {renderClientCell(client, 'email', <span className={styles.emailCell}>{client.email}</span>)}
                                             {renderClientCell(client, 'whatsapp_no')}
                                             {renderClientCell(client, 'client_handler_name', client.client_handler_name ? <span className={styles.handlerBadge}>{client.client_handler_name}</span> : '—')}
-                                            {/* {renderClientCell(client, 'client_ref_no', client.client_ref_no ? <span className={styles.refBadge}>{client.client_ref_no}</span> : '—')} */}
                                             {renderClientCell(client, 'bank_account')}
-                                            {/* <td>
-                                                <div className={styles.scrollableCell}>
-                                                    {client.order_type
-                                                        ? String(client.order_type).split(',').map(s => s.trim()).filter(Boolean).map((type, idx) => (
-                                                            <div key={idx} style={{ whiteSpace: 'nowrap' }}>{type}</div>
-                                                        ))
-                                                        : ''}
-                                                </div>
-                                            </td> */}
                                             <td>
                                                 <div className={styles.tooltipContainer}>
                                                     <span className={styles.ordersBadge}>{client.total_orders}</span>
@@ -941,19 +1112,13 @@ export function Accounts({ searchTerm }) {
                                                             if (!client.order_type) return "No Orders";
                                                             const items = String(client.order_type).split(',').map(s => s.trim()).filter(Boolean);
                                                             const totalOrders = Number(client.total_orders) || items.length;
-                                                            // If only one unique order type, use total_orders as the count
                                                             const uniqueTypes = [...new Set(items)];
                                                             if (uniqueTypes.length === 1) {
-                                                                return totalOrders > 1
-                                                                    ? `1. ${uniqueTypes[0]} - ${totalOrders}`
-                                                                    : `1. ${uniqueTypes[0]}`;
+                                                                return totalOrders > 1 ? `1. ${uniqueTypes[0]} - ${totalOrders}` : `1. ${uniqueTypes[0]}`;
                                                             }
-                                                            // Multiple different order types — count occurrences from comma list
                                                             const counts = {};
                                                             items.forEach(item => { counts[item] = (counts[item] || 0) + 1; });
-                                                            return Object.entries(counts)
-                                                                .map(([val, count], i) => count > 1 ? `${i + 1}. ${val} - ${count}` : `${i + 1}. ${val}`)
-                                                                .join('\n');
+                                                            return Object.entries(counts).map(([val, count], i) => count > 1 ? `${i + 1}. ${val} - ${count}` : `${i + 1}. ${val}`).join('\n');
                                                         })()}
                                                     </div>
                                                 </div>
@@ -961,40 +1126,37 @@ export function Accounts({ searchTerm }) {
                                             <td>
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                                     {client.photo_url ? (
-                                                        <img
-                                                            src={`${BASE_URL}/${client.photo_url}`}
-                                                            alt="Profile"
+                                                        <img src={`${BASE_URL}/${client.photo_url}`} alt="Profile"
                                                             style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }}
                                                             title="Double click to view full size"
                                                             onDoubleClick={() => setSelectedImage(`${BASE_URL}/${client.photo_url}`)}
                                                         />
-                                                    ) : (
-                                                        <span>—</span>
-                                                    )}
+                                                    ) : <span>—</span>}
                                                     <div style={{ display: 'flex', gap: '4px' }}>
                                                         <label style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#e2e8f0', borderRadius: '4px' }} title="Update Photo">
                                                             <CloudCog size={12} />
-                                                            <input
-                                                                type="file"
-                                                                accept="image/jpeg, image/jpg"
-                                                                style={{ display: 'none' }}
+                                                            <input type="file" accept="image/jpeg, image/jpg" style={{ display: 'none' }}
                                                                 onChange={(e) => handleClientPhotoUpload(client.client_id, e.target.files[0])}
                                                             />
                                                         </label>
                                                         {client.photo_url && (
-                                                            <button
-                                                                onClick={() => handleClientPhotoDelete(client.client_id)}
+                                                            <button onClick={() => handleClientPhotoDelete(client.client_id)}
                                                                 style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px' }}
-                                                                title="Remove Photo"
-                                                            >
-                                                                ✕
-                                                            </button>
+                                                                title="Remove Photo">✕</button>
                                                         )}
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td className={styles.actionTd}>
+                                                <div className={styles.actionBtns}>
+                                                    <button className={styles.editRowBtn} title="Edit" onClick={() => handleEditClientOpen(client)}>✏️</button>
+                                                    <button className={styles.deleteRowBtn} title="Delete" onClick={() => setClientDeleteConfirm({ type: 'single', client })}>🗑️</button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    });
+                                })()}
                             </tbody>
                         </table>
                     </div>
@@ -1065,7 +1227,7 @@ export function Accounts({ searchTerm }) {
                                                 onDoubleClick={() => openRangePopup(e)}
                                                 title="Click to update range permissions"
                                                 style={{
-                                                    cursor: 'pointer',
+                                                    cursor: 'pointer',  
                                                     color: 'hsla(0, 0%, 0%, 1.00)',
                                                     fontWeight: 700,
                                                     textDecoration: 'none',
@@ -1187,6 +1349,81 @@ export function Accounts({ searchTerm }) {
                     position={contextMenu.position}
                     onClose={() => setContextMenu(null)}
                 />
+            )}
+
+            {/* Client Delete Confirmation Modal */}
+            {clientDeleteConfirm && (
+                <div className={styles.popupcontainer}>
+                    <div className={`${styles.mainpopupbox} ${styles.smallPopup}`} style={{ maxWidth: '420px' }}>
+                        <div className={styles.header}>
+                            <h3>Confirm Delete</h3>
+                            <button type="button" onClick={() => setClientDeleteConfirm(null)} style={{ border: 'none', background: 'transparent', color: 'red', fontSize: '28px', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <p style={{ padding: '8px 0 16px', color: '#374151', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                            {clientDeleteConfirm.type === 'bulk'
+                                ? `Delete ${selectedClientRows.size} selected client(s)? This cannot be undone.`
+                                : 'Delete this client? This cannot be undone.'}
+                        </p>
+                        <div className={styles.footerpopup}>
+                            <button type="button" id={styles.cancelbtn} onClick={() => setClientDeleteConfirm(null)}>Cancel</button>
+                            <button type="button" id={styles.submitbtn}
+                                style={{ background: '#dc2626' }}
+                                onClick={() => clientDeleteConfirm.type === 'bulk' ? handleBulkDeleteClients() : handleDeleteClient(clientDeleteConfirm.client)}>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Client Modal */}
+            {editClientModal && (
+                <div className={styles.popupcontainer}>
+                    <div className={`${styles.mainpopupbox} ${styles.smallPopup}`} style={{ maxWidth: '640px' }}>
+                        <div className={styles.header}>
+                            <h3>Edit Client</h3>
+                            <button type="button" onClick={() => setEditClientModal(null)} style={{ border: 'none', background: 'transparent', color: 'red', fontSize: '28px', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <form onSubmit={submitEditClient} className={styles.popupform}>
+                            <div className={styles.formcontainer2col}>
+                                {[
+                                    { label: 'Client Name', field: 'name' },
+                                    { label: 'Country', field: 'country' },
+                                    { label: 'Email', field: 'email' },
+                                    { label: 'Whatsapp No', field: 'whatsapp_no' },
+                                    { label: 'Bank Account', field: 'bank_account' },
+                                    { label: 'Client Ref No', field: 'client_ref_no' },
+                                ].map(({ label, field }) => (
+                                    <div className={styles.formContainer} key={field}>
+                                        <fieldset className={styles.inputFieldset}>
+                                            <legend className={styles.inputLegend}>{label}</legend>
+                                            <input
+                                                type="text"
+                                                value={editClientData[field] || ''}
+                                                onChange={e => setEditClientData(prev => ({ ...prev, [field]: e.target.value }))}
+                                            />
+                                        </fieldset>
+                                    </div>
+                                ))}
+                                <div className={styles.formContainer}>
+                                    <fieldset className={styles.inputFieldset}>
+                                        <legend className={styles.inputLegend}>Client Handler</legend>
+                                        <select className={styles.selectInput}
+                                            value={editClientData.client_handler_name || ''}
+                                            onChange={e => setEditClientData(prev => ({ ...prev, client_handler_name: e.target.value }))}>
+                                            <option value=''>Select Handler</option>
+                                            {client_handlers.map(h => <option key={h} value={h}>{h}</option>)}
+                                        </select>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div className={styles.footerpopup}>
+                                <button type="button" id={styles.cancelbtn} onClick={() => setEditClientModal(null)}>Cancel</button>
+                                <button type="submit" id={styles.submitbtn}>Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { BASE_URL } from '../config';
 import HistoryContextMenu from './HistoryContextMenu';
+import { UploadCloud, CheckCircle2 } from 'lucide-react';
 
 const formatDate = (dateString) => {
     if (!dateString || dateString === 'N/A') return 'N/A';
@@ -56,12 +57,15 @@ const defaultDraggableColumns = [
     { key: 'phase_1_payment', label: 'phase 1 payment', isFilter: false },
     { key: 'phase_1_payment_date', label: 'phase 1 payment date', isFilter: false },
     { key: 'phase_1_payment_details', label: 'phase 1 payment reason', isFilter: false },
+    { key: 'phase_1_receipt', label: 'phase 1 receipt', isFilter: false },
     { key: 'phase_2_payment', label: 'phase 2 payment', isFilter: false },
     { key: 'phase_2_payment_date', label: 'phase 2 payment date', isFilter: false },
     { key: 'phase_2_payment_details', label: 'phase 2 payment reason', isFilter: false },
+    { key: 'phase_2_receipt', label: 'phase 2 receipt', isFilter: false },
     { key: 'phase_3_payment', label: 'phase 3 payment', isFilter: false },
     { key: 'phase_3_payment_date', label: 'phase 3 payment date', isFilter: false },
     { key: 'phase_3_payment_details', label: 'phase 3 payment reason', isFilter: false },
+    { key: 'phase_3_receipt', label: 'phase 3 receipt', isFilter: false },
     { key: 'paid_amount', label: 'Total Paid Amount', isFilter: false },
     { key: 'paid_amount_usd', label: 'Paid Amount In USD', isFilter: false },
     { key: 'payment_status', label: 'payment status', isFilter: true },
@@ -184,7 +188,8 @@ export function Tablepage({ searchTerm }) {
         order_type: [],
         index: [],
         rank: [],
-        bank_account: []
+        bank_account: [],
+        payment_method: []
     });
     const [filters, setFilters] = useState({
         payment_status: '',
@@ -199,6 +204,12 @@ export function Tablepage({ searchTerm }) {
     });
     const [activeFilterField, setActiveFilterField] = useState(null); // Which filter dropdown is open
     const itemsPerPage = 15;
+
+    // --- Bulk select & row actions ---
+    const [selectedRows, setSelectedRows] = useState(new Set());
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'single'|'bulk', rowId, rowIndex }
+    const [editRowModal, setEditRowModal] = useState(null); // { rowIndex, rowData }
+    const [editRowData, setEditRowData] = useState({});
 
     const [columns, setColumns] = useState(() => {
         const saved = localStorage.getItem('tableColumnOrder');
@@ -298,7 +309,8 @@ export function Tablepage({ searchTerm }) {
                             order_type: result.data.order_type || [],
                             index: result.data.index || [],
                             rank: result.data.rank || [],
-                            bank_account: result.data.bank_account || []
+                            bank_account: result.data.bank_account || [],
+                            payment_method: result.data.payment_method || []
                         });
                     }
                 })
@@ -323,7 +335,7 @@ export function Tablepage({ searchTerm }) {
     }, [activeFilterField]);
 
     const handleDoubleClick = (rowIndex, fieldName, currentValue) => {
-        const phaseMatch = fieldName.match(/^phase_(\d)_payment(?:_date|_details)?$/);
+        const phaseMatch = fieldName.match(/^phase_(\d)_(payment(?:_date|_details)?|receipt)$/);
         if (phaseMatch) {
             const phase = parseInt(phaseMatch[1]);
             const userRole = localStorage.getItem('user_role') || '';
@@ -343,7 +355,8 @@ export function Tablepage({ searchTerm }) {
                     date: tableData[rowIndex][`phase_${phase}_payment_date`] || '',
                     details: tableData[rowIndex][`phase_${phase}_payment_details`] || '',
                     receive_bank_account: tableData[rowIndex][`phase_${phase}_receive_bank_account`] || '',
-                    payment_method: tableData[rowIndex][`phase_${phase}_payment_method`] || ''
+                    payment_method: tableData[rowIndex][`phase_${phase}_payment_method`] || '',
+                    receiptFile: null
                 }
             });
             return;
@@ -428,15 +441,30 @@ export function Tablepage({ searchTerm }) {
         const token = localStorage.getItem('token');
         const rowToUpdate = updatedTableData[rowIndex];
 
+        const isFormData = !!data.receiptFile;
+        const fetchOptions = {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        };
+
+        if (isFormData) {
+            const formData = new FormData();
+            for (const key in payload) {
+                if (payload[key] !== null && payload[key] !== undefined) {
+                    formData.append(key, payload[key]);
+                }
+            }
+            formData.append(`phase_${phase}_receipt`, data.receiptFile);
+            fetchOptions.body = formData;
+        } else {
+            fetchOptions.headers["Content-Type"] = "application/json";
+            fetchOptions.body = JSON.stringify(payload);
+        }
+
         try {
-            const response = await fetch(`${BASE_URL}/dashboard/orders/${rowToUpdate.order_db_id}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
+            const response = await fetch(`${BASE_URL}/dashboard/orders/${rowToUpdate.order_db_id}`, fetchOptions);
             console.log("payload sent", payload);
             const result = await response.json();
             console.log("payload response", result);
@@ -627,6 +655,111 @@ export function Tablepage({ searchTerm }) {
         setCurrentPage(1);
     }, [searchTerm, filters]);
 
+    // --- Row selection helpers ---
+    const toggleSelectRow = (rowId) => {
+        setSelectedRows(prev => {
+            const next = new Set(prev);
+            if (next.has(rowId)) next.delete(rowId);
+            else next.add(rowId);
+            return next;
+        });
+    };
+
+    const isAllCurrentSelected = currentData.length > 0 && currentData.every(row => selectedRows.has(row.order_db_id));
+
+    const toggleSelectAll = () => {
+        if (isAllCurrentSelected) {
+            setSelectedRows(prev => {
+                const next = new Set(prev);
+                currentData.forEach(row => next.delete(row.order_db_id));
+                return next;
+            });
+        } else {
+            setSelectedRows(prev => {
+                const next = new Set(prev);
+                currentData.forEach(row => next.add(row.order_db_id));
+                return next;
+            });
+        }
+    };
+
+    // --- Delete single row ---
+    const handleDeleteRow = async (row) => {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`${BASE_URL}/dashboard/orders/${row.order_db_id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                setTableData(prev => prev.filter(r => r.order_db_id !== row.order_db_id));
+                setSelectedRows(prev => { const n = new Set(prev); n.delete(row.order_db_id); return n; });
+                showNotification('Row deleted successfully', 'success');
+            } else {
+                showNotification('Failed to delete row', 'error');
+            }
+        } catch (e) {
+            showNotification('Error connecting to server', 'error');
+        }
+        setDeleteConfirm(null);
+    };
+
+    // --- Bulk delete ---
+    const handleBulkDelete = async () => {
+        const token = localStorage.getItem('token');
+        const ids = [...selectedRows];
+        let successCount = 0;
+        for (const id of ids) {
+            try {
+                const res = await fetch(`${BASE_URL}/dashboard/orders/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) successCount++;
+            } catch (e) {}
+        }
+        setTableData(prev => prev.filter(r => !selectedRows.has(r.order_db_id)));
+        setSelectedRows(new Set());
+        showNotification(`${successCount} row(s) deleted successfully`, 'success');
+        setDeleteConfirm(null);
+    };
+
+    // --- Edit row modal ---
+    const handleEditRowOpen = (row, actualIndex) => {
+        setEditRowModal({ rowIndex: actualIndex, rowId: row.order_db_id });
+        setEditRowData({ ...row });
+    };
+
+    const handleEditRowChange = (field, value) => {
+        setEditRowData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const submitEditRow = async (e) => {
+        e.preventDefault();
+        if (!editRowModal) return;
+        const token = localStorage.getItem('token');
+        const { rowIndex, rowId } = editRowModal;
+        try {
+            const response = await fetch(`${BASE_URL}/dashboard/orders/${rowId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(editRowData)
+            });
+            if (response.ok) {
+                const updatedTableData = [...tableData];
+                updatedTableData[rowIndex] = { ...updatedTableData[rowIndex], ...editRowData };
+                setTableData(updatedTableData);
+                showNotification('Row updated successfully', 'success');
+            } else {
+                showNotification('Failed to update row', 'error');
+            }
+        } catch (e) {
+            showNotification('Error connecting to server', 'error');
+        }
+        setEditRowModal(null);
+        setEditRowData({});
+    };
+
     // Fields that should never be editable inline
     const userRole = localStorage.getItem('user_role');
     const readOnlyArray = ['total_amount', 'paid_amount', 'client_id', 'client_Email', 'client_country', 'client_whatsapp_number', 'ref_no', 'receive_bank_account', 'paid_amount_usd'];
@@ -695,12 +828,10 @@ export function Tablepage({ searchTerm }) {
             return val;
         };
 
-        // Read-only: just show the value, no double-click editing
+        // Read-only: just show the value, no double-click editing and no edit history
         if (READ_ONLY_FIELDS.has(fieldName)) {
             return (
-                <td key={fieldName} style={{ cursor: 'default', userSelect: 'text' }} title="Read-only field" data-field={fieldName}
-                    onContextMenu={(e) => handleRightClick(e, row, fieldName)}
-                >
+                <td key={fieldName} style={{ cursor: 'default', userSelect: 'text' }} title="Read-only field" data-field={fieldName}>
                     {safeDisplay(displayValue ?? row[fieldName])}
                 </td>
             );
@@ -728,7 +859,7 @@ export function Tablepage({ searchTerm }) {
 
         const textareaFields = ['journal_name', 'client_affiliations', 'remarks'];
         const plainTextareaFields = ['title'];
-        const linkFields = ['client_drive_link', 'payment_drive_link'];
+        const linkFields = ['client_drive_link', 'payment_drive_link', 'phase_1_receipt', 'phase_2_receipt', 'phase_3_receipt'];
 
         // --- Status Badge renderer ---
         const getOrderStatusBadge = (value) => {
@@ -930,121 +1061,85 @@ export function Tablepage({ searchTerm }) {
             return;
         }
 
-        const data = filteredData.map((row, index) => ({
-            "S.No": index + 1,
-            "Client ID": String(row.client_id || ''),
-            "Order Date": formatDate(row.order_date),
-            "Reference ID": String(row.reference_id || ''),
-            "Order ID": String(row.order_id || ''),
-            "New Order": row.is_new_order || '',
-            "Client Ref ID": String(row.ref_no || ''),
-            "Manuscript ID": String(row.manuscript_id || ''),
-            "Country": row.client_country || '',
-            "Handler Mail": row.client_handler || '',
-            "Handler Name": row.client_handler_name || '',
-            "Handler Phone": String(row.client_handler_phone_number || ''),
-            "Profile Name": row.profile_name || '',
-            "Client Email": row.client_Email || '',
-            "Whatsapp No": String(row.client_whatsapp_number || ''),
-            "Order Type": row.order_type || '',
-            "Title": row.title || '',
-            "Journal Name": row.journal_name || '',
-            "Index": row.index || '',
-            "Rank": row.rank || '',
-            "Writing Amount": row.writing_amount,
-            "Modification Amount": row.modification_amount,
-            "PO Amount": row.po_amount,
-            "Implementation Amount": row.implementation_amount,
-            "Currency": row.currency || '',
-            "Total Amount": row.total_amount,
-            "Writing Start Date": formatDate(row.writing_start_date),
-            "Writing End Date": formatDate(row.writing_end_date),
-            "Modification Start Date": formatDate(row.modification_start_date),
-            "Modification End Date": formatDate(row.modification_end_date),
-            "Implementation Start Date": formatDate(row.implementation_start_date),
-            "Implementation End Date": formatDate(row.implementation_end_date),
-            "PO Start Date": formatDate(row.po_start_date),
-            "PO End Date": formatDate(row.po_end_date),
-            "Phase 1 Payment": row.phase_1_payment,
-            "Phase 1 Payment Date": formatDate(row.phase_1_payment_date),
-            "Phase 1 Payment Reason": row.phase_1_payment_details || '',
-            "Phase 2 Payment": row.phase_2_payment,
-            "Phase 2 Payment Date": formatDate(row.phase_2_payment_date),
-            "Phase 2 Payment Reason": row.phase_2_payment_details || '',
-            "Phase 3 Payment": row.phase_3_payment,
-            "Phase 3 Payment Date": formatDate(row.phase_3_payment_date),
-            "Phase 3 Payment Reason": row.phase_3_payment_details || '',
-            "Total Paid Amount": row.paid_amount,
-            "Paid Amount In USD": row.paid_amount_usd,
-            "Payment Status": row.payment_status || '',
-            "Client Account": String(row.bank_account || ''),
-            "Received Account": String(row.receive_bank_account || ''),
-            "Client Affiliations": row.client_affiliations || '',
-            "Remarks": row.remarks || '',
-            "Client Drive": row.client_drive_link || '',
-            "Client Details": row.clients_details || '',
-            "Record Status": row.order_status || '',
-            "WeChat": row.we_chat || ''
-        }));
+        // Map each column key → { header label, value getter, preferred Excel width }
+        const colConfig = {
+            order_date:                   { label: 'Order Date',               get: r => formatDate(r.order_date),                    wch: 14 },
+            reference_id:                 { label: 'Reference ID',             get: r => String(r.reference_id || ''),                 wch: 16 },
+            order_id:                     { label: 'Order ID',                 get: r => String(r.order_id || ''),                     wch: 16 },
+            is_new_order:                 { label: 'New Order',                get: r => r.is_new_order || '',                         wch: 12 },
+            ref_no:                       { label: 'Client Ref ID',            get: r => String(r.ref_no || ''),                       wch: 15 },
+            manuscript_id:                { label: 'Manuscript ID',            get: r => String(r.manuscript_id || ''),                wch: 15 },
+            client_country:               { label: 'Country',                  get: r => r.client_country || '',                       wch: 14 },
+            client_handler:               { label: 'Handler Mail',             get: r => r.client_handler || '',                       wch: 28 },
+            client_handler_name:          { label: 'Handler Name',             get: r => r.client_handler_name || '',                  wch: 20 },
+            client_handler_phone_number:  { label: 'Handler Phone',            get: r => String(r.client_handler_phone_number || ''), wch: 18 },
+            profile_name:                 { label: 'Profile Name',             get: r => r.profile_name || '',                         wch: 20 },
+            client_Email:                 { label: 'Client Email',             get: r => r.client_Email || '',                         wch: 28 },
+            client_whatsapp_number:       { label: 'Whatsapp No',              get: r => String(r.client_whatsapp_number || ''),      wch: 18 },
+            order_type:                   { label: 'Order Type',               get: r => r.order_type || '',                           wch: 15 },
+            we_chat:                      { label: 'WeChat',                   get: r => r.we_chat || '',                              wch: 15 },
+            title:                        { label: 'Title',                    get: r => r.title || '',                                wch: 50 },
+            journal_name:                 { label: 'Journal Name',             get: r => r.journal_name || '',                         wch: 40 },
+            index:                        { label: 'Index',                    get: r => r.index || '',                                wch: 14 },
+            rank:                         { label: 'Rank',                     get: r => r.rank || '',                                 wch: 12 },
+            writing_amount:               { label: 'Writing Amount',           get: r => r.writing_amount,                             wch: 15 },
+            modification_amount:          { label: 'Modification Amount',      get: r => r.modification_amount,                        wch: 18 },
+            po_amount:                    { label: 'PO Amount',                get: r => r.po_amount,                                  wch: 13 },
+            implementation_amount:        { label: 'Implementation Amount',    get: r => r.implementation_amount,                      wch: 20 },
+            currency:                     { label: 'Currency',                 get: r => r.currency || '',                             wch: 10 },
+            total_amount:                 { label: 'Total Amount',             get: r => r.total_amount,                               wch: 14 },
+            writing_start_date:           { label: 'Writing Start Date',       get: r => formatDate(r.writing_start_date),             wch: 16 },
+            writing_end_date:             { label: 'Writing End Date',         get: r => formatDate(r.writing_end_date),               wch: 16 },
+            modification_start_date:      { label: 'Modification Start Date',  get: r => formatDate(r.modification_start_date),        wch: 20 },
+            modification_end_date:        { label: 'Modification End Date',    get: r => formatDate(r.modification_end_date),          wch: 20 },
+            implementation_start_date:    { label: 'Impl. Start Date',         get: r => formatDate(r.implementation_start_date),      wch: 18 },
+            implementation_end_date:      { label: 'Impl. End Date',           get: r => formatDate(r.implementation_end_date),        wch: 18 },
+            po_start_date:                { label: 'PO Start Date',            get: r => formatDate(r.po_start_date),                  wch: 15 },
+            po_end_date:                  { label: 'PO End Date',              get: r => formatDate(r.po_end_date),                    wch: 15 },
+            phase_1_payment:              { label: 'Phase 1 Payment',          get: r => r.phase_1_payment,                            wch: 15 },
+            phase_1_payment_date:         { label: 'Phase 1 Date',             get: r => formatDate(r.phase_1_payment_date),           wch: 16 },
+            phase_1_payment_details:      { label: 'Phase 1 Reason',           get: r => r.phase_1_payment_details || '',              wch: 25 },
+            phase_1_receipt:              { label: 'Phase 1 Receipt',          get: r => r.phase_1_receipt || '',                      wch: 30 },
+            phase_2_payment:              { label: 'Phase 2 Payment',          get: r => r.phase_2_payment,                            wch: 15 },
+            phase_2_payment_date:         { label: 'Phase 2 Date',             get: r => formatDate(r.phase_2_payment_date),           wch: 16 },
+            phase_2_payment_details:      { label: 'Phase 2 Reason',           get: r => r.phase_2_payment_details || '',              wch: 25 },
+            phase_2_receipt:              { label: 'Phase 2 Receipt',          get: r => r.phase_2_receipt || '',                      wch: 30 },
+            phase_3_payment:              { label: 'Phase 3 Payment',          get: r => r.phase_3_payment,                            wch: 15 },
+            phase_3_payment_date:         { label: 'Phase 3 Date',             get: r => formatDate(r.phase_3_payment_date),           wch: 16 },
+            phase_3_payment_details:      { label: 'Phase 3 Reason',           get: r => r.phase_3_payment_details || '',              wch: 25 },
+            phase_3_receipt:              { label: 'Phase 3 Receipt',          get: r => r.phase_3_receipt || '',                      wch: 30 },
+            paid_amount:                  { label: 'Total Paid Amount',        get: r => r.paid_amount,                                wch: 16 },
+            paid_amount_usd:              { label: 'Paid Amount (USD)',         get: r => r.paid_amount_usd,                            wch: 16 },
+            payment_status:               { label: 'Payment Status',           get: r => r.payment_status || '',                       wch: 15 },
+            bank_account:                 { label: 'Client Account',           get: r => String(r.bank_account || ''),                 wch: 22 },
+            receive_bank_account:         { label: 'Received Account',         get: r => String(r.receive_bank_account || ''),         wch: 22 },
+            client_affiliations:          { label: 'Client Affiliations',      get: r => r.client_affiliations || '',                  wch: 40 },
+            remarks:                      { label: 'Remarks',                  get: r => r.remarks || '',                              wch: 40 },
+            client_drive_link:            { label: 'Client Drive',             get: r => r.client_drive_link || '',                    wch: 30 },
+            payment_drive_link:           { label: 'Payment Drive',            get: r => r.payment_drive_link || '',                   wch: 30 },
+            order_status:                 { label: 'Record Status',            get: r => r.order_status || '',                         wch: 15 },
+        };
+
+        // Build rows dynamically following the current column drag order
+        const data = filteredData.map((row, index) => {
+            const obj = {};
+            obj['S.No'] = index + 1;
+            obj['Client ID'] = String(row.client_id || '');
+            // Iterate columns in current drag order
+            columns.forEach(col => {
+                const cfg = colConfig[col.key];
+                if (cfg) obj[cfg.label] = cfg.get(row);
+            });
+            return obj;
+        });
 
         const worksheet = XLSX.utils.json_to_sheet(data);
 
-        // Define column widths for better structure in Excel
+        // Set column widths to match the dynamic order
         const wscols = [
             { wch: 8 },  // S.No
             { wch: 15 }, // Client ID
-            { wch: 12 }, // Order Date
-            { wch: 15 }, // Reference ID
-            { wch: 15 }, // Order ID
-            { wch: 12 }, // New Order
-            { wch: 15 }, // Client Ref ID
-            { wch: 15 }, // Manuscript ID
-            { wch: 15 }, // Country
-            { wch: 28 }, // Handler Mail
-            { wch: 20 }, // Handler Name
-            { wch: 18 }, // Handler Phone
-            { wch: 20 }, // Profile Name
-            { wch: 28 }, // Client Email
-            { wch: 18 }, // Whatsapp
-            { wch: 15 }, // Order Type
-            { wch: 50 }, // Title (wider)
-            { wch: 40 }, // Journal Name (wider)
-            { wch: 12 }, // Index
-            { wch: 10 }, // Rank
-            { wch: 14 }, // Writing Amount
-            { wch: 18 }, // Mod Amount
-            { wch: 12 }, // PO Amount
-            { wch: 20 }, // Implementation Amount
-            { wch: 10 }, // Currency
-            { wch: 12 }, // Total Amount
-            { wch: 15 }, // Writing Start
-            { wch: 15 }, // Writing End
-            { wch: 15 }, // Mod Start
-            { wch: 15 }, // Mod End
-            { wch: 20 }, // Implementation Start
-            { wch: 20 }, // Implementation End
-            { wch: 15 }, // PO Start
-            { wch: 15 }, // PO End
-            { wch: 15 }, // Phase 1
-            { wch: 18 }, // Phase 1 Date
-            { wch: 25 }, // Phase 1 Reason
-            { wch: 15 }, // Phase 2
-            { wch: 18 }, // Phase 2 Date
-            { wch: 25 }, // Phase 2 Reason
-            { wch: 15 }, // Phase 3
-            { wch: 18 }, // Phase 3 Date
-            { wch: 25 }, // Phase 3 Reason
-            { wch: 16 }, // Total Paid
-            { wch: 16 }, // Paid Amount In USD
-            { wch: 15 }, // Payment Status
-            { wch: 20 }, // Client Account
-            { wch: 20 }, // Received Account
-            { wch: 40 }, // Client Affiliations
-            { wch: 40 }, // Remarks
-            { wch: 30 }, // Client Drive
-            { wch: 20 }, // Client Details
-            { wch: 15 }, // Record Status
-            { wch: 15 }  // WeChat
+            ...columns.map(col => ({ wch: colConfig[col.key]?.wch || 15 }))
         ];
         worksheet['!cols'] = wscols;
 
@@ -1068,9 +1163,17 @@ export function Tablepage({ searchTerm }) {
             <div className={Style.tablecontainer}>
                 {/* table header */}
                 <div className={Style.tableheader}>
-                    <h2>Overall Table</h2>
+                    <h2>Overall Order & Client Summary</h2>
                     <p>displaying <span>{currentData.length}</span> of {filteredData.length} records</p>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        {selectedRows.size > 0 && (
+                            <button
+                                className={Style.bulkDeleteBtn}
+                                onClick={() => setDeleteConfirm({ type: 'bulk' })}
+                            >
+                                🗑 Delete Selected ({selectedRows.size})
+                            </button>
+                        )}
                         {Object.values(filters).some(f => f !== '') && (
                             <button className={Style.clearFilterBtn} onClick={() => setFilters({
                                 payment_status: '',
@@ -1092,6 +1195,15 @@ export function Tablepage({ searchTerm }) {
                     <table className={Style.tabledata}>
                         <thead>
                             <tr>
+                                <th className={Style.checkboxTh}>
+                                    <input
+                                        type="checkbox"
+                                        className={Style.rowCheckbox}
+                                        checked={isAllCurrentSelected}
+                                        onChange={toggleSelectAll}
+                                        title="Select all on this page"
+                                    />
+                                </th>
                                 <th>S.no</th>
                                 <th data-field="client_id">client Id</th>
                                 {columns.map((col, index) => {
@@ -1114,6 +1226,7 @@ export function Tablepage({ searchTerm }) {
                                         </th>
                                     );
                                 })}
+                                <th className={Style.actionTh}>Actions</th>
                             </tr>
                         </thead>
 
@@ -1121,8 +1234,17 @@ export function Tablepage({ searchTerm }) {
                             {currentData.map((row, index) => {
                                 // Find actual index in tableData for editing
                                 const actualIndex = tableData.findIndex(item => item === row);
+                                const isSelected = selectedRows.has(row.order_db_id);
                                 return (
-                                    <tr key={startIndex + index}>
+                                    <tr key={startIndex + index} className={isSelected ? Style.selectedRow : ''}>
+                                        <td className={Style.checkboxTd}>
+                                            <input
+                                                type="checkbox"
+                                                className={Style.rowCheckbox}
+                                                checked={isSelected}
+                                                onChange={() => toggleSelectRow(row.order_db_id)}
+                                            />
+                                        </td>
                                         <td>{startIndex + index + 1}</td>
                                         {renderCell(row, actualIndex, 'client_id')}
 
@@ -1140,6 +1262,26 @@ export function Tablepage({ searchTerm }) {
                                             const displayValue = isDate ? formatDate(row[col.key]) : undefined;
                                             return renderCell(row, actualIndex, col.key, displayValue);
                                         })}
+
+                                        {/* Action Column */}
+                                        <td className={Style.actionTd}>
+                                            <div className={Style.actionBtns}>
+                                                <button
+                                                    className={Style.editRowBtn}
+                                                    title="Edit Row"
+                                                    onClick={() => handleEditRowOpen(row, actualIndex)}
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    className={Style.deleteRowBtn}
+                                                    title="Delete Row"
+                                                    onClick={() => setDeleteConfirm({ type: 'single', row })}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -1220,11 +1362,56 @@ export function Tablepage({ searchTerm }) {
                                     required
                                 >
                                     <option value="">Select Payment Method</option>
-                                    {dropdownOptions.payment_method_options.map((method, i) => {
+                                    {settingsOptions.payment_method.map((method, i) => {
                                         const methodStr = typeof method === 'object' && method !== null ? JSON.stringify(method) : method;
                                         return <option key={i} value={methodStr}>{methodStr}</option>;
                                     })}
                                 </select>
+                            </div>
+                            
+                            <div className={Style.modalInputGroup}>
+                                <label>Receipt Screenshot</label>
+                                <label 
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px',
+                                        padding: '12px 16px',
+                                        border: '1.5px dashed',
+                                        borderColor: phaseModal.data.receiptFile ? '#86efac' : '#cbd5e1',
+                                        borderRadius: '8px',
+                                        backgroundColor: phaseModal.data.receiptFile ? '#f0fdf4' : '#f8fafc',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        color: phaseModal.data.receiptFile ? '#16a34a' : '#64748b',
+                                        fontWeight: 500,
+                                        fontSize: '0.9rem',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.backgroundColor = '#eff6ff'; }}
+                                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = phaseModal.data.receiptFile ? '#86efac' : '#cbd5e1'; e.currentTarget.style.backgroundColor = phaseModal.data.receiptFile ? '#f0fdf4' : '#f8fafc'; }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.currentTarget.style.borderColor = '#86efac';
+                                        e.currentTarget.style.backgroundColor = '#f0fdf4';
+                                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                            handlePhaseModalChange('receiptFile', e.dataTransfer.files[0]);
+                                        }
+                                    }}
+                                >
+                                    {phaseModal.data.receiptFile ? <CheckCircle2 size={20} /> : <UploadCloud size={20} />}
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
+                                        {phaseModal.data.receiptFile ? phaseModal.data.receiptFile.name : 'Click or drag to upload receipt'}
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg, image/jpg, image/png, application/pdf"
+                                        onChange={(e) => handlePhaseModalChange('receiptFile', e.target.files[0])}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
                             </div>
                             
                             <div className={Style.modalFooter}>
@@ -1244,6 +1431,103 @@ export function Tablepage({ searchTerm }) {
                     position={contextMenu.position}
                     onClose={() => setContextMenu(null)}
                 />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className={Style.modalOverlay}>
+                    <div className={Style.modalCard} style={{ maxWidth: '420px' }}>
+                        <div className={Style.modalHeader}>
+                            <h3>Confirm Delete</h3>
+                            <button className={Style.closeBtn} onClick={() => setDeleteConfirm(null)}>×</button>
+                        </div>
+                        <div style={{ padding: '20px 24px' }}>
+                            <p style={{ color: '#374151', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                                {deleteConfirm.type === 'bulk'
+                                    ? `Are you sure you want to delete ${selectedRows.size} selected row(s)? This action cannot be undone.`
+                                    : 'Are you sure you want to delete this row? This action cannot be undone.'}
+                            </p>
+                        </div>
+                        <div className={Style.modalFooter}>
+                            <button className={Style.cancelBtn} onClick={() => setDeleteConfirm(null)}>Cancel</button>
+                            <button
+                                className={Style.submitBtn}
+                                style={{ background: '#dc2626' }}
+                                onClick={() =>
+                                    deleteConfirm.type === 'bulk'
+                                        ? handleBulkDelete()
+                                        : handleDeleteRow(deleteConfirm.row)
+                                }
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Row Modal */}
+            {editRowModal && (
+                <div className={Style.modalOverlay}>
+                    <div className={Style.modalCard} style={{ maxWidth: '680px', maxHeight: '85vh', overflowY: 'auto' }}>
+                        <div className={Style.modalHeader}>
+                            <h3>Edit Row</h3>
+                            <button className={Style.closeBtn} onClick={() => setEditRowModal(null)}>×</button>
+                        </div>
+                        <form className={Style.modalForm} onSubmit={submitEditRow}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', padding: '4px 0' }}>
+                                {columns
+                                    .filter(col => !['paid_amount', 'paid_amount_usd', 'total_amount', 'receive_bank_account'].includes(col.key))
+                                    .map(col => (
+                                        <div className={Style.modalInputGroup} key={col.key}>
+                                            <label>{col.label}</label>
+                                            {['payment_status', 'order_status', 'is_new_order', 'currency'].includes(col.key) ? (
+                                                <select
+                                                    value={editRowData[col.key] || ''}
+                                                    onChange={e => handleEditRowChange(col.key, e.target.value)}
+                                                    className={Style.editInput}
+                                                >
+                                                    <option value=''>Select</option>
+                                                    {(col.key === 'payment_status' ? ['Paid', 'Pending', 'Partial']
+                                                        : col.key === 'order_status' ? ['Active', 'Inactive']
+                                                        : col.key === 'is_new_order' ? ['YES', 'NO']
+                                                        : ['USD', 'INR', 'CNY', 'AED', 'SAR']
+                                                    ).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                </select>
+                                            ) : col.key.includes('date') ? (
+                                                <input
+                                                    type='date'
+                                                    value={editRowData[col.key] ? editRowData[col.key].slice(0, 10) : ''}
+                                                    onChange={e => handleEditRowChange(col.key, e.target.value)}
+                                                    className={Style.editInput}
+                                                />
+                                            ) : ['remarks', 'client_affiliations', 'journal_name', 'title'].includes(col.key) ? (
+                                                <textarea
+                                                    value={editRowData[col.key] || ''}
+                                                    onChange={e => handleEditRowChange(col.key, e.target.value)}
+                                                    className={Style.editInput}
+                                                    rows={2}
+                                                    style={{ resize: 'vertical' }}
+                                                />
+                                            ) : (
+                                                <input
+                                                    type='text'
+                                                    value={editRowData[col.key] !== undefined && editRowData[col.key] !== null ? editRowData[col.key] : ''}
+                                                    onChange={e => handleEditRowChange(col.key, e.target.value)}
+                                                    className={Style.editInput}
+                                                />
+                                            )}
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                            <div className={Style.modalFooter}>
+                                <button type='button' className={Style.cancelBtn} onClick={() => setEditRowModal(null)}>Cancel</button>
+                                <button type='submit' className={Style.submitBtn}>Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

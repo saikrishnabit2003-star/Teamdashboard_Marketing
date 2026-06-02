@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tablepage } from './components/Tablepage';
 import { Accounts } from './components/Accounts';
 import { Lookup } from './components/Lookup';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profilepage from './components/Profilepage';
 import { History } from './components/History';
@@ -37,6 +37,20 @@ function DashboardLayout() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const userProfileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userProfileRef.current && !userProfileRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
@@ -148,7 +162,7 @@ function DashboardLayout() {
             />
 
           </div>
-          <div id='userprofile'>
+          <div id='userprofile' ref={userProfileRef}>
             <img src={userphoto ? `${BASE_URL}/${userphoto}` : Faceicon} alt="profile" />
             <h3>{username}</h3>
             <button id='dropdown-btn' onClick={handleDropdown}><img src={DownArrowIcon} alt="" /></button>

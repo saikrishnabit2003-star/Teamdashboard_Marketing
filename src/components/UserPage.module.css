@@ -411,8 +411,6 @@
     height: 520px;
     background-color: white;
     padding: 10px;
-    overflow-x: auto;
-    overflow-y: auto;
     border-radius: 20px;
     scrollbar-width: none; /* For Firefox */
     -ms-overflow-style: none;
@@ -421,7 +419,7 @@
     display: none;
 }
 .tablecontainerdata{
-    height: 100%;
+    height: 90%;
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
@@ -457,6 +455,7 @@
     font-weight: 700;
     font-size:large;
     text-transform: capitalize;
+    text-align: center;
 }
 
 .tabledata td {
@@ -477,8 +476,7 @@
     align-items: center; */
     background-color: white;
 }
-.tabledata tbody tr :nth-child(2),
-.tabledata tbody tr :nth-child(8){
+.tabledata tbody tr :nth-child(2){
     color: red;
 }
 

@@ -492,7 +492,7 @@ export function UserPage({ searchTerm }) {
 
                 {/* container 5 */}
                 <div className={Style.tablecontainer}>
-                    <div id={Style.tableheader}><p>Table Data</p></div>
+                    <div id={Style.tableheader}><p>Country-Wise Status Report</p></div>
                     <div className={Style.tablecontainerdata}>
                         <table className={Style.tabledata}>
                             <thead>

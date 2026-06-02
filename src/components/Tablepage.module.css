@@ -233,14 +233,26 @@
   position: sticky;
   left: 0;
   z-index: 1;
+  font-weight: 600;
+  background-color: inherit;
+}
+.tabledata td:nth-child(3) {
+  position: sticky;
+  left: 62px;
+  z-index: 1;
   color: var(--red);
   font-weight: 600;
   background-color: inherit;
 }
-
 .tabledata th:nth-child(2) {
   position: sticky;
   left: 0;
+  z-index: 3;
+  background: var(--navy); /* keep same as thead */
+}
+.tabledata th:nth-child(3) {
+  position: sticky;
+  left: 62px;
   z-index: 3;
   background: var(--navy); /* keep same as thead */
 }
@@ -791,4 +803,130 @@ select.editInput {
 /* Fix for date picker getting clipped/overlapped by sticky columns */
 :global(.react-datepicker-popper) {
   z-index: 9999 !important;
+}
+
+/* ─── Checkbox column ────────────────────────────────────────── */
+.checkboxTh,
+.checkboxTd {
+  width: 44px !important;
+  min-width: 44px !important;
+  text-align: center !important;
+  padding: 0 8px !important;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--navy);
+}
+
+.checkboxTd {
+  background-color: inherit !important;
+  z-index: 1;
+}
+
+.rowCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  border-radius: 3px;
+}
+
+/* ─── Selected row highlight ─────────────────────────────────── */
+.selectedRow td {
+  background-color: rgba(0, 110, 254, 0.06) !important;
+}
+
+/* ─── Action column ──────────────────────────────────────────── */
+.actionTh {
+  width: 90px !important;
+  min-width: 90px !important;
+  text-align: center !important;
+  position: sticky;
+  right: 0;
+  background: var(--navy) !important;
+  z-index: 3;
+}
+
+.actionTd {
+  position: sticky;
+  right: 0;
+  background-color: inherit !important;
+  z-index: 1;
+  text-align: center !important;
+  padding: 0 6px !important;
+  width: 90px;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.06);
+}
+
+.actionBtns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.editRowBtn,
+.deleteRowBtn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.editRowBtn {
+  background: rgba(0, 110, 254, 0.1);
+  color: var(--accent);
+}
+
+.editRowBtn:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.deleteRowBtn {
+  background: rgba(229, 72, 77, 0.1);
+  color: var(--red);
+}
+
+.deleteRowBtn:hover {
+  background: var(--red);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* ─── Bulk delete button ─────────────────────────────────────── */
+.bulkDeleteBtn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--red);
+  background: rgba(229, 72, 77, 0.08);
+  color: var(--red);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all var(--transition);
+  animation: fadeIn 0.2s ease;
+}
+
+.bulkDeleteBtn:hover {
+  background: var(--red);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 72, 77, 0.35);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
