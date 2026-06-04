@@ -174,12 +174,37 @@
 .profileTag {
     background: white;
     color: #6366f1;
-    padding: 8px 18px;
+    padding: 8px 12px 8px 18px; /* Adjusted padding to accommodate the button */
     border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
     border: 1px solid #e5e7eb;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.deleteTagBtn {
+    background: transparent;
+    color: #9ca3af;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.deleteTagBtn:hover {
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 .noData {

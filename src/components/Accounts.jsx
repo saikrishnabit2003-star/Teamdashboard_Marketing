@@ -13,6 +13,8 @@ export function Accounts({ searchTerm }) {
 
     const handleRightClick = (e, client, fieldName) => {
         e.preventDefault();
+        const userRole = localStorage.getItem('user_role');
+        if (userRole !== 'admin' && userRole !== 'manager') return;
         setContextMenu({
             collection: 'clients',
             documentId: client.client_id,
@@ -264,6 +266,7 @@ export function Accounts({ searchTerm }) {
                     client_handler_name: editClientData.client_handler_name,
                     bank_account: editClientData.bank_account,
                     client_ref_no: editClientData.client_ref_no,
+                    client_id: editClientData.client_id,
                 })
             });
             if (res.ok) {
@@ -1393,6 +1396,8 @@ export function Accounts({ searchTerm }) {
                                     { label: 'Whatsapp No', field: 'whatsapp_no' },
                                     { label: 'Bank Account', field: 'bank_account' },
                                     { label: 'Client Ref No', field: 'client_ref_no' },
+                                    { label: 'Client Id', field: 'client_id' },
+
                                 ].map(({ label, field }) => (
                                     <div className={styles.formContainer} key={field}>
                                         <fieldset className={styles.inputFieldset}>

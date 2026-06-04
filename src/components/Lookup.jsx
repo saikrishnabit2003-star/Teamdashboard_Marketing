@@ -21,6 +21,8 @@ export function Lookup() {
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
 
     const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('user_role');
+    const canEdit = userRole === 'admin' || userRole === 'manager';
 
     const fetchSettings = async () => {
         try {
@@ -207,18 +209,20 @@ export function Lookup() {
                 <div className={styles.content}>
                     <div className={styles.contentHeader}>
                         <h3>{formatLabel(activeTab)} Options</h3>
-                        <button 
-                            className={styles.addBtn}
-                            onClick={() => {
-                                setShowAddForm(!showAddForm);
-                                setNewValue(activeTab === 'bank_account' ? { bank_name: '', account_number: '', ifsc_code: '', handler_name: '' } : "");
-                            }}
-                        >
-                            {showAddForm ? 'Cancel' : '+ Add New Option'}
-                        </button>
+                        {canEdit && (
+                            <button 
+                                className={styles.addBtn}
+                                onClick={() => {
+                                    setShowAddForm(!showAddForm);
+                                    setNewValue(activeTab === 'bank_account' ? { bank_name: '', account_number: '', ifsc_code: '', handler_name: '' } : "");
+                                }}
+                            >
+                                {showAddForm ? 'Cancel' : '+ Add New Option'}
+                            </button>
+                        )}
                     </div>
 
-                    {showAddForm && (
+                    {canEdit && showAddForm && (
                         <div className={styles.addForm}>
                             {activeTab === 'bank_account' ? (
                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px', width: '100%' }}>
@@ -248,13 +252,13 @@ export function Lookup() {
                                 <tr>
                                     <th style={{ width: '80px' }}>S.No</th>
                                     <th>Option Value</th>
-                                    <th style={{ width: '150px', textAlign: 'center' }}>Actions</th>
+                                    {canEdit && <th style={{ width: '150px', textAlign: 'center' }}>Actions</th>}
                                 </tr>
                             </thead>
                             <tbody>
                                 {data[activeTab].length === 0 ? (
                                     <tr>
-                                        <td colSpan="3" style={{ textAlign: 'center', padding: '24px' }}>No options found.</td>
+                                        <td colSpan={canEdit ? 3 : 2} style={{ textAlign: 'center', padding: '24px' }}>No options found.</td>
                                     </tr>
                                 ) : (
                                     data[activeTab].map((item, index) => (
@@ -293,21 +297,23 @@ export function Lookup() {
                                                     item
                                                 )}
                                             </td>
-                                            <td>
-                                                <div className={styles.actions}>
-                                                    {editingIndex === index ? (
-                                                        <>
-                                                            <button className={styles.saveBtn} onClick={() => handleSave(index)}>Save</button>
-                                                            <button className={styles.cancelBtn} onClick={() => setEditingIndex(null)}>Cancel</button>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <button className={styles.editBtn} onClick={() => handleEdit(index, item)}>Edit</button>
-                                                            <button className={styles.deleteBtn} onClick={() => handleDelete(index)}>Delete</button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
+                                            {canEdit && (
+                                                <td>
+                                                    <div className={styles.actions}>
+                                                        {editingIndex === index ? (
+                                                            <>
+                                                                <button className={styles.saveBtn} onClick={() => handleSave(index)}>Save</button>
+                                                                <button className={styles.cancelBtn} onClick={() => setEditingIndex(null)}>Cancel</button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <button className={styles.editBtn} onClick={() => handleEdit(index, item)}>Edit</button>
+                                                                <button className={styles.deleteBtn} onClick={() => handleDelete(index)}>Delete</button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 )}

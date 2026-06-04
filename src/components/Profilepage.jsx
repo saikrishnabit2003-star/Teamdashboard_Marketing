@@ -17,7 +17,11 @@ const Profilepage = () => {
     // New states for profile names
     const [newProfileName, setNewProfileName] = useState('');
     const [isAppending, setIsAppending] = useState(false);
-    
+
+    // New states for WhatsApp numbers
+    const [newWhatsapp, setNewWhatsapp] = useState('');
+    const [isAppendingWhatsapp, setIsAppendingWhatsapp] = useState(false);
+
     // New states for WeChat accounts
     const [newWeChat, setNewWeChat] = useState('');
     const [isAppendingWeChat, setIsAppendingWeChat] = useState(false);
@@ -96,6 +100,95 @@ const Profilepage = () => {
         }
     };
 
+    const handleDeleteProfile = async (profileToDelete) => {
+        if (!window.confirm(`Are you sure you want to delete the profile "${profileToDelete}"?`)) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`${BASE_URL}/users/profiles/${userData.email}/${profileToDelete}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                showNotification("Profile deleted successfully", "success");
+                fetchUserDetails();
+            } else {
+                const errorData = await response.json();
+                showNotification(errorData.message || "Failed to delete profile", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting profile:", error);
+            showNotification("Error connecting to server", "error");
+        }
+    };
+
+    const handleAppendWhatsapp = async (e) => {
+        e.preventDefault();
+        if (!newWhatsapp.trim()) {
+            showNotification("Please enter a WhatsApp number", "error");
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        setIsAppendingWhatsapp(true);
+
+        try {
+            const response = await fetch(`${BASE_URL}/users/whatsapp_numbers/append`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    email: userData.email,
+                    profile_name: newWhatsapp.trim()
+                })
+            });
+
+            if (response.ok) {
+                showNotification("WhatsApp number appended successfully", "success");
+                setNewWhatsapp('');
+                fetchUserDetails();
+            } else {
+                const errorData = await response.json();
+                showNotification(errorData.message || "Failed to append WhatsApp number", "error");
+            }
+        } catch (error) {
+            console.error("Error appending WhatsApp number:", error);
+            showNotification("Error connecting to server", "error");
+        } finally {
+            setIsAppendingWhatsapp(false);
+        }
+    };
+
+    const handleDeleteWhatsapp = async (whatsappToDelete) => {
+        if (!window.confirm(`Are you sure you want to delete the WhatsApp number "${whatsappToDelete}"?`)) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`${BASE_URL}/users/whatsapp_numbers/${userData.email}/${whatsappToDelete}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                showNotification("WhatsApp number deleted successfully", "success");
+                fetchUserDetails();
+            } else {
+                const errorData = await response.json();
+                showNotification(errorData.message || "Failed to delete WhatsApp number", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting WhatsApp number:", error);
+            showNotification("Error connecting to server", "error");
+        }
+    };
+
     const handleAppendWeChat = async (e) => {
         e.preventDefault();
         if (!newWeChat.trim()) {
@@ -115,14 +208,14 @@ const Profilepage = () => {
                 },
                 body: JSON.stringify({
                     email: userData.email,
-                    profile_name: newWeChat.trim() 
+                    profile_name: newWeChat.trim()
                 })
             });
 
             if (response.ok) {
                 showNotification("WeChat appended successfully", "success");
                 setNewWeChat('');
-                fetchUserDetails(); 
+                fetchUserDetails();
             } else {
                 const errorData = await response.json();
                 showNotification(errorData.message || "Failed to append WeChat", "error");
@@ -132,6 +225,31 @@ const Profilepage = () => {
             showNotification("Error connecting to server", "error");
         } finally {
             setIsAppendingWeChat(false);
+        }
+    };
+
+    const handleDeleteWeChat = async (weChatToDelete) => {
+        if (!window.confirm(`Are you sure you want to delete the WeChat "${weChatToDelete}"?`)) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`${BASE_URL}/users/we_chats/${userData.email}/${weChatToDelete}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                showNotification("WeChat deleted successfully", "success");
+                fetchUserDetails();
+            } else {
+                const errorData = await response.json();
+                showNotification(errorData.message || "Failed to delete WeChat", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting WeChat:", error);
+            showNotification("Error connecting to server", "error");
         }
     };
 
@@ -209,7 +327,7 @@ const Profilepage = () => {
             showNotification("Error connecting to server", "error");
         }
     };
-
+    // console.log(isAppending);    
     const handlePhotoDelete = async () => {
         if (!window.confirm("Are you sure you want to remove your profile photo?")) return;
 
@@ -276,7 +394,7 @@ const Profilepage = () => {
                     <div className={styles.avatarSection}>
                         <div className={styles.avatar}>
                             {userPhoto ? (
-                                <img decoding="async"   src={`${userPhoto}?q=50`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50px' }} />
+                                <img decoding="async" src={`${userPhoto}?q=50`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50px' }} />
                             ) : (
                                 full_name ? full_name.charAt(0).toUpperCase() : 'U'
                             )}
@@ -350,7 +468,16 @@ const Profilepage = () => {
                             <div className={styles.profileTags}>
                                 {profile_names && profile_names.length > 0 ? (
                                     profile_names.map((profile, index) => (
-                                        <span key={index} className={styles.profileTag}>{profile}</span>
+                                        <span key={index} className={styles.profileTag}>
+                                            {profile}
+                                            <button
+                                                className={styles.deleteTagBtn}
+                                                onClick={() => handleDeleteProfile(profile)}
+                                                title="Delete profile"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
                                     ))
                                 ) : (
                                     <p className={styles.noData}>No profiles associated.</p>
@@ -376,13 +503,70 @@ const Profilepage = () => {
                     </div>
 
                     <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>WhatsApp Number Management</h3>
+                        <div className={styles.profilesWrapper}>
+                            <label>Current WhatsApp Numbers</label>
+                            <div className={styles.profileTags}>
+                                {userData?.whatsapp_numbers && userData.whatsapp_numbers.length > 0 ? (
+                                    userData.whatsapp_numbers.map((whatsapp, index) => (
+                                        <span key={index} className={styles.profileTag} style={{ color: '#0ea5e9', borderColor: '#bae6fd' }}>
+                                            {whatsapp}
+                                            <button
+                                                className={styles.deleteTagBtn}
+                                                onClick={() => handleDeleteWhatsapp(whatsapp)}
+                                                title="Delete WhatsApp number"
+                                                style={{ color: '#0284c7' }}
+                                                onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e0f2fe'; e.currentTarget.style.color = '#0369a1'; }}
+                                                onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#0284c7'; }}
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ))
+                                ) : (
+                                    <p className={styles.noData}>No WhatsApp numbers associated.</p>
+                                )}
+                            </div>
+
+                            <div className={styles.appendBox} style={{ background: '#f0f9ff', borderColor: '#e0f2fe' }}>
+                                <label style={{ color: '#0369a1' }}>Add New WhatsApp Number</label>
+                                <form className={styles.appendForm} onSubmit={handleAppendWhatsapp}>
+                                    <input
+                                        type="number"
+                                        placeholder="Enter WhatsApp number..."
+                                        value={newWhatsapp}
+                                        onChange={(e) => setNewWhatsapp(e.target.value)}
+                                        disabled={isAppendingWhatsapp}
+                                        style={{ borderColor: '#e0f2fe' }}
+                                    />
+                                    <button type="submit" disabled={isAppendingWhatsapp || !newWhatsapp.trim()} style={{ background: '#0ea5e9' }}>
+                                        {isAppendingWhatsapp ? '...' : 'Append'}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={styles.section}>
                         <h3 className={styles.sectionTitle}>WeChat Management</h3>
                         <div className={styles.profilesWrapper}>
                             <label>Current WeChats</label>
                             <div className={styles.profileTags}>
                                 {userData?.we_chats && userData.we_chats.length > 0 ? (
                                     userData.we_chats.map((wechat, index) => (
-                                        <span key={index} className={styles.profileTag} style={{ color: '#10b981', borderColor: '#a7f3d0' }}>{wechat}</span>
+                                        <span key={index} className={styles.profileTag} style={{ color: '#10b981', borderColor: '#a7f3d0' }}>
+                                            {wechat}
+                                            <button 
+                                                className={styles.deleteTagBtn} 
+                                                onClick={() => handleDeleteWeChat(wechat)}
+                                                title="Delete WeChat"
+                                                style={{ color: '#10b981' }}
+                                                onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#d1fae5'; e.currentTarget.style.color = '#047857'; }}
+                                                onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#10b981'; }}
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
                                     ))
                                 ) : (
                                     <p className={styles.noData}>No WeChats associated.</p>
@@ -394,7 +578,7 @@ const Profilepage = () => {
                                 <form className={styles.appendForm} onSubmit={handleAppendWeChat}>
                                     <input
                                         type="text"
-                                        placeholder="Enter WeChat name..."
+                                        placeholder="Enter WeChat..."
                                         value={newWeChat}
                                         onChange={(e) => setNewWeChat(e.target.value)}
                                         disabled={isAppendingWeChat}

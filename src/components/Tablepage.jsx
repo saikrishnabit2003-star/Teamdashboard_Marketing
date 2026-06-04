@@ -32,6 +32,7 @@ const defaultDraggableColumns = [
     { key: 'client_handler_name', label: 'Handler Name', isFilter: true },
     { key: 'client_handler_phone_number', label: 'Handler Phone', isFilter: true },
     { key: 'profile_name', label: 'profile name', isFilter: false },
+    { key: 'whatsapp_number', label: 'Profile Whatsapp', isFilter: false },
     { key: 'client_Email', label: 'client Email', isFilter: false },
     { key: 'client_whatsapp_number', label: 'whatsapp no', isFilter: false },
     { key: 'order_type', label: 'order type', isFilter: true },
@@ -169,6 +170,8 @@ export function Tablepage({ searchTerm }) {
 
     const handleRightClick = (e, row, fieldName) => {
         e.preventDefault();
+        const userRole = localStorage.getItem('user_role');
+        if (userRole !== 'admin' && userRole !== 'manager') return;
         setContextMenu({
             collection: 'orders',
             documentId: row.order_db_id,
@@ -318,9 +321,32 @@ export function Tablepage({ searchTerm }) {
         }
     };
 
+    const fetchUsersOptions = () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch(`${BASE_URL}/users/options`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(result => {
+                    console.log(result)
+                    if (result.status_code === 200 && result.data) {
+                        setDropdownOptions(prev => ({
+                            ...prev,
+                            profile_names: result.data.profile_names || [],
+                            whatsapp_numbers: result.data.whatsapp_numbers || [],
+                            we_chats: result.data.we_chats || prev.we_chats
+                        }));
+                    }
+                })
+                .catch(err => console.error("Error loading user options:", err));
+        }
+    };
+
     useEffect(() => {
         fetchTableData();
         fetchSettings();
+        fetchUsersOptions();
     }, []);
 
     // Handle clicking outside of filter dropdowns to close them
@@ -362,7 +388,7 @@ export function Tablepage({ searchTerm }) {
             return;
         }
 
-        const dropdownFields = ['payment_status', 'index', 'rank', 'order_type', 'currency', 'order_status', 'is_new_order'];
+        const dropdownFields = ['payment_status', 'index', 'rank', 'order_type', 'currency', 'order_status', 'is_new_order', 'profile_name', 'whatsapp_number', 'we_chat'];
         let initialValue = currentValue || '';
 
         if (fieldName === 'is_new_order' && typeof initialValue === 'string') {
@@ -441,39 +467,53 @@ export function Tablepage({ searchTerm }) {
         const token = localStorage.getItem('token');
         const rowToUpdate = updatedTableData[rowIndex];
 
-        const isFormData = !!data.receiptFile;
         const fetchOptions = {
             method: "PATCH",
             headers: {
-                "Authorization": `Bearer ${token}`
-            }
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
         };
-
-        if (isFormData) {
-            const formData = new FormData();
-            for (const key in payload) {
-                if (payload[key] !== null && payload[key] !== undefined) {
-                    formData.append(key, payload[key]);
-                }
-            }
-            formData.append(`phase_${phase}_receipt`, data.receiptFile);
-            fetchOptions.body = formData;
-        } else {
-            fetchOptions.headers["Content-Type"] = "application/json";
-            fetchOptions.body = JSON.stringify(payload);
-        }
 
         try {
             const response = await fetch(`${BASE_URL}/dashboard/orders/${rowToUpdate.order_db_id}`, fetchOptions);
-            console.log("payload sent", payload);
-            const result = await response.json();
-            console.log("payload response", result);
-            if (response.ok) {
-                showNotification(`Phase ${phase} payment updated successfully`, "success");
-            } else {
+            if (!response.ok) {
                 showNotification("Failed to update phase payment", "error");
                 fetchTableData();
+                return;
             }
+
+            if (data.receiptFile) {
+                const formData = new FormData();
+                formData.append('file', data.receiptFile);
+
+                const receiptResponse = await fetch(`${BASE_URL}/orders/${rowToUpdate.order_db_id}/receipt/${phase}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!receiptResponse.ok) {
+                    showNotification("Payment updated, but failed to upload receipt", "error");
+                    fetchTableData();
+                    return;
+                }
+                const receiptResult = await receiptResponse.json();
+                let urlToSet = '';
+                if (receiptResult && receiptResult.data) {
+                    urlToSet = receiptResult.data.receipt_url || receiptResult.data[`receipt_phase_${phase}_url`] || '';
+                }
+                if (urlToSet) {
+                    updatedTableData[rowIndex][`phase_${phase}_receipt`] = urlToSet;
+                    updatedTableData[rowIndex][`receipt_phase_${phase}_url`] = urlToSet;
+                    setTableData(updatedTableData);
+                }
+            }
+
+            showNotification(`Phase ${phase} payment updated successfully`, "success");
         } catch (error) {
             console.error('Error updating backend:', error);
             showNotification("Error connecting to server", "error");
@@ -854,7 +894,8 @@ export function Tablepage({ searchTerm }) {
             is_new_order: ['YES', 'NO'],
             we_chat: dropdownOptions.we_chats || [],
             client_handler_name: dropdownOptions.employee_names || [],
-
+            profile_name: dropdownOptions.profile_names || [],
+            whatsapp_number: dropdownOptions.whatsapp_numbers || [],
         };
 
         const textareaFields = ['journal_name', 'client_affiliations', 'remarks'];
@@ -1044,11 +1085,20 @@ export function Tablepage({ searchTerm }) {
                             ))
                             : 'N/A'}
                     </div>
-                ) : linkFields.includes(fieldName) ? (
-                    row[fieldName] ? (
-                        <a href={row[fieldName]} target="_blank" rel="noopener noreferrer" className={Style.viewLink}>view</a>
-                    ) : ''
-                ) : (
+                ) : linkFields.includes(fieldName) ? (() => {
+                    let linkHref = row[fieldName];
+                    if (!linkHref && fieldName.startsWith('phase_') && fieldName.endsWith('_receipt')) {
+                        const phaseNum = fieldName.split('_')[1];
+                        linkHref = row[`receipt_phase_${phaseNum}_url`];
+                    }
+                    // Prefix BASE_URL if the link is a relative static path
+                    if (linkHref && !linkHref.startsWith('http') && linkHref.startsWith('static/')) {
+                        linkHref = `${BASE_URL}/${linkHref}`;
+                    }
+                    return linkHref ? (
+                        <a href={linkHref} target="_blank" rel="noopener noreferrer" className={Style.viewLink}>view</a>
+                    ) : '';
+                })() : (
                     displayValue || row[fieldName] || 'N/A'
                 )}
             </td>
@@ -1074,6 +1124,7 @@ export function Tablepage({ searchTerm }) {
             client_handler_name:          { label: 'Handler Name',             get: r => r.client_handler_name || '',                  wch: 20 },
             client_handler_phone_number:  { label: 'Handler Phone',            get: r => String(r.client_handler_phone_number || ''), wch: 18 },
             profile_name:                 { label: 'Profile Name',             get: r => r.profile_name || '',                         wch: 20 },
+            profile_whatsapp_number:      { label: 'Profile Whatsapp',         get: r => String(r.whatsapp_number || ''),      wch: 18 },
             client_Email:                 { label: 'Client Email',             get: r => r.client_Email || '',                         wch: 28 },
             client_whatsapp_number:       { label: 'Whatsapp No',              get: r => String(r.client_whatsapp_number || ''),      wch: 18 },
             order_type:                   { label: 'Order Type',               get: r => r.order_type || '',                           wch: 15 },
@@ -1099,15 +1150,15 @@ export function Tablepage({ searchTerm }) {
             phase_1_payment:              { label: 'Phase 1 Payment',          get: r => r.phase_1_payment,                            wch: 15 },
             phase_1_payment_date:         { label: 'Phase 1 Date',             get: r => formatDate(r.phase_1_payment_date),           wch: 16 },
             phase_1_payment_details:      { label: 'Phase 1 Reason',           get: r => r.phase_1_payment_details || '',              wch: 25 },
-            phase_1_receipt:              { label: 'Phase 1 Receipt',          get: r => r.phase_1_receipt || '',                      wch: 30 },
+            phase_1_receipt:              { label: 'Phase 1 Receipt',          get: r => r.phase_1_receipt || r.receipt_phase_1_url || '', wch: 30 },
             phase_2_payment:              { label: 'Phase 2 Payment',          get: r => r.phase_2_payment,                            wch: 15 },
             phase_2_payment_date:         { label: 'Phase 2 Date',             get: r => formatDate(r.phase_2_payment_date),           wch: 16 },
             phase_2_payment_details:      { label: 'Phase 2 Reason',           get: r => r.phase_2_payment_details || '',              wch: 25 },
-            phase_2_receipt:              { label: 'Phase 2 Receipt',          get: r => r.phase_2_receipt || '',                      wch: 30 },
+            phase_2_receipt:              { label: 'Phase 2 Receipt',          get: r => r.phase_2_receipt || r.receipt_phase_2_url || '', wch: 30 },
             phase_3_payment:              { label: 'Phase 3 Payment',          get: r => r.phase_3_payment,                            wch: 15 },
             phase_3_payment_date:         { label: 'Phase 3 Date',             get: r => formatDate(r.phase_3_payment_date),           wch: 16 },
             phase_3_payment_details:      { label: 'Phase 3 Reason',           get: r => r.phase_3_payment_details || '',              wch: 25 },
-            phase_3_receipt:              { label: 'Phase 3 Receipt',          get: r => r.phase_3_receipt || '',                      wch: 30 },
+            phase_3_receipt:              { label: 'Phase 3 Receipt',          get: r => r.phase_3_receipt || r.receipt_phase_3_url || '', wch: 30 },
             paid_amount:                  { label: 'Total Paid Amount',        get: r => r.paid_amount,                                wch: 16 },
             paid_amount_usd:              { label: 'Paid Amount (USD)',         get: r => r.paid_amount_usd,                            wch: 16 },
             payment_status:               { label: 'Payment Status',           get: r => r.payment_status || '',                       wch: 15 },
@@ -1166,14 +1217,7 @@ export function Tablepage({ searchTerm }) {
                     <h2>Overall Order & Client Summary</h2>
                     <p>displaying <span>{currentData.length}</span> of {filteredData.length} records</p>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        {selectedRows.size > 0 && (
-                            <button
-                                className={Style.bulkDeleteBtn}
-                                onClick={() => setDeleteConfirm({ type: 'bulk' })}
-                            >
-                                🗑 Delete Selected ({selectedRows.size})
-                            </button>
-                        )}
+
                         {Object.values(filters).some(f => f !== '') && (
                             <button className={Style.clearFilterBtn} onClick={() => setFilters({
                                 payment_status: '',
@@ -1195,15 +1239,6 @@ export function Tablepage({ searchTerm }) {
                     <table className={Style.tabledata}>
                         <thead>
                             <tr>
-                                <th className={Style.checkboxTh}>
-                                    <input
-                                        type="checkbox"
-                                        className={Style.rowCheckbox}
-                                        checked={isAllCurrentSelected}
-                                        onChange={toggleSelectAll}
-                                        title="Select all on this page"
-                                    />
-                                </th>
                                 <th>S.no</th>
                                 <th data-field="client_id">client Id</th>
                                 {columns.map((col, index) => {
@@ -1226,7 +1261,6 @@ export function Tablepage({ searchTerm }) {
                                         </th>
                                     );
                                 })}
-                                <th className={Style.actionTh}>Actions</th>
                             </tr>
                         </thead>
 
@@ -1236,15 +1270,7 @@ export function Tablepage({ searchTerm }) {
                                 const actualIndex = tableData.findIndex(item => item === row);
                                 const isSelected = selectedRows.has(row.order_db_id);
                                 return (
-                                    <tr key={startIndex + index} className={isSelected ? Style.selectedRow : ''}>
-                                        <td className={Style.checkboxTd}>
-                                            <input
-                                                type="checkbox"
-                                                className={Style.rowCheckbox}
-                                                checked={isSelected}
-                                                onChange={() => toggleSelectRow(row.order_db_id)}
-                                            />
-                                        </td>
+                                    <tr key={startIndex + index}>
                                         <td>{startIndex + index + 1}</td>
                                         {renderCell(row, actualIndex, 'client_id')}
 
@@ -1262,26 +1288,6 @@ export function Tablepage({ searchTerm }) {
                                             const displayValue = isDate ? formatDate(row[col.key]) : undefined;
                                             return renderCell(row, actualIndex, col.key, displayValue);
                                         })}
-
-                                        {/* Action Column */}
-                                        <td className={Style.actionTd}>
-                                            <div className={Style.actionBtns}>
-                                                <button
-                                                    className={Style.editRowBtn}
-                                                    title="Edit Row"
-                                                    onClick={() => handleEditRowOpen(row, actualIndex)}
-                                                >
-                                                    ✏️
-                                                </button>
-                                                <button
-                                                    className={Style.deleteRowBtn}
-                                                    title="Delete Row"
-                                                    onClick={() => setDeleteConfirm({ type: 'single', row })}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                 );
                             })}

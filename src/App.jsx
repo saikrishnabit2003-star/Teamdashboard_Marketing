@@ -127,11 +127,9 @@ function DashboardLayout() {
           <NavLink to="/accounts" style={{ textDecoration: "none" }} onClick={() => setIsSidebarOpen(false)}>
             <button>Accounts</button>
           </NavLink>
-          {(localStorage.getItem('user_role') === 'admin' || localStorage.getItem('user_role') === 'manager') && (
-            <NavLink to="/Lookup" style={{ textDecoration: "none" }} onClick={() => setIsSidebarOpen(false)}>
-              <button>Lookups</button>
-            </NavLink>
-          )}
+          <NavLink to="/Lookup" style={{ textDecoration: "none" }} onClick={() => setIsSidebarOpen(false)}>
+            <button>Lookups</button>
+          </NavLink>
           {/* <NavLink to="/AmountTable" style={{ textDecoration: "none" }} onClick={() => setIsSidebarOpen(false)}>
             <button>Amount table</button>
           </NavLink>
@@ -229,11 +227,7 @@ function DashboardLayout() {
             <Route path="/dashboard" element={<UserPage searchTerm={searchTerm} />} />
             <Route path="table" element={<Tablepage searchTerm={searchTerm} />} />
             <Route path="accounts" element={<Accounts searchTerm={searchTerm} />} />
-            {(localStorage.getItem('user_role') === 'admin' || localStorage.getItem('user_role') === 'manager') ? (
-              <Route path="Lookup" element={<Lookup searchTerm={searchTerm} />} />
-            ) : (
-              <Route path="Lookup" element={<Navigate to="/dashboard" replace />} />
-            )}
+            <Route path="Lookup" element={<Lookup searchTerm={searchTerm} />} />
             <Route path="profile" element={<Profilepage />} />
             <Route path="amounttable" element={<AmountTable searchTerm={searchTerm} />} />
             <Route path="history" element={<History searchTerm={searchTerm} />} />

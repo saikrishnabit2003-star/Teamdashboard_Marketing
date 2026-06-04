@@ -229,14 +229,14 @@
 }
 
 /* ─── Sticky second column ──────────────────────────────────── */
-.tabledata td:nth-child(2) {
+.tabledata td:nth-child(1) {
   position: sticky;
   left: 0;
   z-index: 1;
   font-weight: 600;
   background-color: inherit;
 }
-.tabledata td:nth-child(3) {
+.tabledata td:nth-child(2) {
   position: sticky;
   left: 62px;
   z-index: 1;
@@ -244,13 +244,13 @@
   font-weight: 600;
   background-color: inherit;
 }
-.tabledata th:nth-child(2) {
+.tabledata th:nth-child(1) {
   position: sticky;
   left: 0;
   z-index: 3;
   background: var(--navy); /* keep same as thead */
 }
-.tabledata th:nth-child(3) {
+.tabledata th:nth-child(2) {
   position: sticky;
   left: 62px;
   z-index: 3;
