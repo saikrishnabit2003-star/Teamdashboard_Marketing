@@ -3,7 +3,7 @@ import styles from "./Accounts.module.css";
 import { ImagePlus } from "lucide-react";
 import { BASE_URL } from "../config";
 
-export function ClientForm({ formValues, handleChange, profile_names, client_handlers }) {
+export function ClientForm({ formValues, handleChange, profile_names, client_handlers, nextClientId, nextReferenceId }) {
     const [errorMsg, setErrorMsg] = useState("");
     const [fileName, setFileName] = useState("");
     const [settingsOptions, setSettingsOptions] = useState({
@@ -75,7 +75,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         name="client_id"
                         value={formValues.client_id}
                         onChange={handleChange}
-                        placeholder="Ex: 101"
+                        placeholder={nextClientId || "Ex: 101"}
                     />
                 </fieldset>
 
@@ -89,7 +89,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         type="date"
                     />
                 </fieldset>
-                
+
                 {/* reference id */}
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Reference ID</legend>
@@ -97,7 +97,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         name="reference_id"
                         value={formValues.reference_id}
                         onChange={handleChange}
-                        placeholder="Ex: 101"
+                        placeholder={nextReferenceId || "Ex: 101"}
                     />
                 </fieldset>
 
@@ -152,7 +152,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     </select>
                 </fieldset>
 
-                
+
             </div>
 
             <div className={styles.formContainer}>
@@ -176,7 +176,7 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                         onChange={handleChange}
                         placeholder="+91..."
                     />
-                </fieldset>  
+                </fieldset>
 
                 <fieldset className={styles.inputFieldset}>
                     <legend className={styles.inputLegend}>Title</legend>
@@ -253,8 +253,8 @@ export function ClientForm({ formValues, handleChange, profile_names, client_han
                     />
                 </fieldset>
 
-                
-                
+
+
             </div>
 
             <div className={styles.formContainer}>

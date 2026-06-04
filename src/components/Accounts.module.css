@@ -973,17 +973,17 @@ display: inline-flex;
 .tooltipContent {
   visibility: hidden;
   position: absolute;
-  right: 125%;
+  right: 115%;
   top: 50%;
   transform: translateY(-50%) translateX(5px);
   background: var(--navy);
   color: #fff;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
   white-space: pre-wrap;
-  z-index: 100;
+  z-index: 9999;
   opacity: 0;
   transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
   box-shadow: var(--shadow-md);
@@ -991,6 +991,7 @@ display: inline-flex;
   letter-spacing: 0.03em;
   pointer-events: none;
   min-width: max-content;
+  max-width: 200px;
   text-align: left;
 }
 
@@ -1011,6 +1012,14 @@ display: inline-flex;
   transform: translateY(-50%) translateX(0);
 }
 
+
+/* Allow tooltip to overflow outside the Orders cell */
+.tooltipContainer {
+  overflow: visible;
+}
+.subcontainer2 table td:has(.tooltipContainer) {
+  overflow: visible;
+}
 /* ─── Checkbox column ───────────────────────────────────────── */
 .checkboxTh {
   width: 44px !important;

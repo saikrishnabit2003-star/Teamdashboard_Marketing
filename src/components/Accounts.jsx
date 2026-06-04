@@ -72,6 +72,8 @@ export function Accounts({ searchTerm }) {
     const [sampleData, setSampleData] = useState([]);
     const [client_handlers, setclient_handlers] = useState([]);
     const [profile_names, setprofile_names] = useState([]);
+    const [nextClientId, setNextClientId] = useState('');
+    const [nextReferenceId, setNextReferenceId] = useState('');
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
 
@@ -218,6 +220,7 @@ export function Accounts({ searchTerm }) {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log(res);
             if (res.ok) {
                 setSampleData(prev => prev.filter(c => c.client_id !== client.client_id));
                 setSelectedClientRows(prev => { const n = new Set(prev); n.delete(client.client_id); return n; });
@@ -234,7 +237,7 @@ export function Accounts({ searchTerm }) {
             try {
                 const res = await fetch(`${BASE_URL}/clients/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) count++;
-            } catch {}
+            } catch { }
         }
         setSampleData(prev => prev.filter(c => !selectedClientRows.has(c.client_id)));
         setSelectedClientRows(new Set());
@@ -321,7 +324,7 @@ export function Accounts({ searchTerm }) {
         }
 
         return (
-            <td onDoubleClick={() => handleClientDoubleClick(client, fieldName, client[fieldName])} 
+            <td onDoubleClick={() => handleClientDoubleClick(client, fieldName, client[fieldName])}
                 onContextMenu={(e) => handleRightClick(e, client, fieldName)}
                 style={{ cursor: 'pointer' }}>
                 {value}
@@ -356,6 +359,8 @@ export function Accounts({ searchTerm }) {
                 setSampleData(list);
                 setclient_handlers(data?.details?.employee_names || data?.detail?.employee_names || []);
                 setprofile_names(data?.details?.profile_names || data?.detail?.profile_names || []);
+                setNextClientId(data?.details?.next_client_id || data?.detail?.next_client_id || data?.next_client_id || '');
+                setNextReferenceId(data?.details?.next_reference_id || data?.detail?.next_reference_id || data?.next_reference_id || '');
             })
             .catch(err => console.error("Failed to fetch clients:", err))
             .finally(() => setLoading(false));
@@ -742,8 +747,9 @@ export function Accounts({ searchTerm }) {
             payload.append("request", JSON.stringify(requestPayload));
 
             if (formValues.photoFile) {
-                payload.append("client_photo", formValues.photoFile);
+                payload.append("client_photo", formValues.photoFile, formValues.photoFile.name || "photo.jpg");
             }
+            console.log("payload", payload);
         } else if (popupType === 'employee') {
             const start = parseFloat(formValues.start_range);
             const end = parseFloat(formValues.end_range);
@@ -964,7 +970,7 @@ export function Accounts({ searchTerm }) {
                             <button type="button" onClick={closePopup} style={{ border: 'none', background: 'transparent', color: 'red', fontSize: '28px', cursor: 'pointer' }}>×</button>
                         </div>
                         <form onSubmit={handleSubmit} className={styles.popupform}>
-                            {popupType === 'client' && <ClientForm formValues={formValues} handleChange={handleChange} profile_names={profile_names} client_handlers={client_handlers} />}
+                            {popupType === 'client' && <ClientForm formValues={formValues} handleChange={handleChange} profile_names={profile_names} client_handlers={client_handlers} nextClientId={nextClientId} nextReferenceId={nextReferenceId} />}
                             {popupType === 'employee' && <EmployeeForm formValues={formValues} handleChange={handleChange} />}
                             {popupType === 'admin' && <AdminForm formValues={formValues} handleChange={handleChange} profile_names={profile_names} />}
                             <div className={styles.footerpopup}>
@@ -1056,7 +1062,7 @@ export function Accounts({ searchTerm }) {
                                             checked={sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
                                                 Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).length > 0 &&
                                                 sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
-                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).every(c => selectedClientRows.has(c.client_id))}
+                                                    Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).every(c => selectedClientRows.has(c.client_id))}
                                             onChange={() => toggleSelectAllClients(sampleData.filter(c =>
                                                 (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
                                                 Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)))}
@@ -1092,71 +1098,60 @@ export function Accounts({ searchTerm }) {
                                     return filtered.map((client, index) => {
                                         const isClientSelected = selectedClientRows.has(client.client_id);
                                         return (
-                                        <tr key={client._id || client.client_id} className={isClientSelected ? styles.selectedRow : ''}>
-                                            <td className={styles.checkboxTd}>
-                                                <input type="checkbox" className={styles.rowCheckbox}
-                                                    checked={isClientSelected}
-                                                    onChange={() => toggleSelectClientRow(client.client_id)}
-                                                />
-                                            </td>
-                                            <td>{index + 1}</td>
-                                            {renderClientCell(client, 'client_id', <span className={styles.clientIdBadge}>{client.client_id}</span>)}
-                                            {renderClientCell(client, 'name', <span className={styles.clientNameCell}>{client.name}</span>)}
-                                            {renderClientCell(client, 'country', client.country ? <span className={styles.locationBadge}>{client.country}</span> : '—')}
-                                            {renderClientCell(client, 'email', <span className={styles.emailCell}>{client.email}</span>)}
-                                            {renderClientCell(client, 'whatsapp_no')}
-                                            {renderClientCell(client, 'client_handler_name', client.client_handler_name ? <span className={styles.handlerBadge}>{client.client_handler_name}</span> : '—')}
-                                            {renderClientCell(client, 'bank_account')}
-                                            <td>
-                                                <div className={styles.tooltipContainer}>
-                                                    <span className={styles.ordersBadge}>{client.total_orders}</span>
-                                                    <div className={styles.tooltipContent}>
-                                                        {(() => {
-                                                            if (!client.order_type) return "No Orders";
-                                                            const items = String(client.order_type).split(',').map(s => s.trim()).filter(Boolean);
-                                                            const totalOrders = Number(client.total_orders) || items.length;
-                                                            const uniqueTypes = [...new Set(items)];
-                                                            if (uniqueTypes.length === 1) {
-                                                                return totalOrders > 1 ? `1. ${uniqueTypes[0]} - ${totalOrders}` : `1. ${uniqueTypes[0]}`;
-                                                            }
-                                                            const counts = {};
-                                                            items.forEach(item => { counts[item] = (counts[item] || 0) + 1; });
-                                                            return Object.entries(counts).map(([val, count], i) => count > 1 ? `${i + 1}. ${val} - ${count}` : `${i + 1}. ${val}`).join('\n');
-                                                        })()}
+                                            <tr key={client._id || client.client_id} className={isClientSelected ? styles.selectedRow : ''}>
+                                                <td className={styles.checkboxTd}>
+                                                    <input type="checkbox" className={styles.rowCheckbox}
+                                                        checked={isClientSelected}
+                                                        onChange={() => toggleSelectClientRow(client.client_id)}
+                                                    />
+                                                </td>
+                                                <td>{index + 1}</td>
+                                                {renderClientCell(client, 'client_id', <span className={styles.clientIdBadge}>{client.client_id}</span>)}
+                                                {renderClientCell(client, 'name', <span className={styles.clientNameCell}>{client.name}</span>)}
+                                                {renderClientCell(client, 'country', client.country ? <span className={styles.locationBadge}>{client.country}</span> : '—')}
+                                                {renderClientCell(client, 'email', <span className={styles.emailCell}>{client.email}</span>)}
+                                                {renderClientCell(client, 'whatsapp_no')}
+                                                {renderClientCell(client, 'client_handler_name', client.client_handler_name ? <span className={styles.handlerBadge}>{client.client_handler_name}</span> : '—')}
+                                                {renderClientCell(client, 'bank_account')}
+                                                <td>
+                                                    <div className={styles.tooltipContainer}>
+                                                        <span className={styles.ordersBadge}>{client.total_orders}</span>
+                                                        <div className={styles.tooltipContent}>
+                                                            {client.order_type || "Order Type Not Mentioned"}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                                                    {client.photo_url ? (
-                                                        <img src={`${BASE_URL}/${client.photo_url}`} alt="Profile"
-                                                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }}
-                                                            title="Double click to view full size"
-                                                            onDoubleClick={() => setSelectedImage(`${BASE_URL}/${client.photo_url}`)}
-                                                        />
-                                                    ) : <span>—</span>}
-                                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                                        <label style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#e2e8f0', borderRadius: '4px' }} title="Update Photo">
-                                                            <CloudCog size={12} />
-                                                            <input type="file" accept="image/jpeg, image/jpg" style={{ display: 'none' }}
-                                                                onChange={(e) => handleClientPhotoUpload(client.client_id, e.target.files[0])}
+                                                </td>
+                                                <td>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                        {client.photo_url ? (
+                                                            <img src={`${BASE_URL}/${client.photo_url}`} alt="Profile"
+                                                                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }}
+                                                                title="Double click to view full size"
+                                                                onDoubleClick={() => setSelectedImage(`${BASE_URL}/${client.photo_url}`)}
                                                             />
-                                                        </label>
-                                                        {client.photo_url && (
-                                                            <button onClick={() => handleClientPhotoDelete(client.client_id)}
-                                                                style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px' }}
-                                                                title="Remove Photo">✕</button>
-                                                        )}
+                                                        ) : <span>—</span>}
+                                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                                            <label style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#e2e8f0', borderRadius: '4px' }} title="Update Photo">
+                                                                <CloudCog size={12} />
+                                                                <input type="file" accept="image/jpeg, image/jpg" style={{ display: 'none' }}
+                                                                    onChange={(e) => handleClientPhotoUpload(client.client_id, e.target.files[0])}
+                                                                />
+                                                            </label>
+                                                            {client.photo_url && (
+                                                                <button onClick={() => handleClientPhotoDelete(client.client_id)}
+                                                                    style={{ fontSize: '10px', cursor: 'pointer', padding: '2px 4px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px' }}
+                                                                    title="Remove Photo">✕</button>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className={styles.actionTd}>
-                                                <div className={styles.actionBtns}>
-                                                    <button className={styles.editRowBtn} title="Edit" onClick={() => handleEditClientOpen(client)}>✏️</button>
-                                                    <button className={styles.deleteRowBtn} title="Delete" onClick={() => setClientDeleteConfirm({ type: 'single', client })}>🗑️</button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                </td>
+                                                <td className={styles.actionTd}>
+                                                    <div className={styles.actionBtns}>
+                                                        <button className={styles.editRowBtn} title="Edit" onClick={() => handleEditClientOpen(client)}>✏️</button>
+                                                        <button className={styles.deleteRowBtn} title="Delete" onClick={() => setClientDeleteConfirm({ type: 'single', client })}>🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         );
                                     });
                                 })()}
@@ -1230,7 +1225,7 @@ export function Accounts({ searchTerm }) {
                                                 onDoubleClick={() => openRangePopup(e)}
                                                 title="Click to update range permissions"
                                                 style={{
-                                                    cursor: 'pointer',  
+                                                    cursor: 'pointer',
                                                     color: 'hsla(0, 0%, 0%, 1.00)',
                                                     fontWeight: 700,
                                                     textDecoration: 'none',

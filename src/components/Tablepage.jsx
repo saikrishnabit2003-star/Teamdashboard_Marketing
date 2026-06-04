@@ -76,7 +76,7 @@ const defaultDraggableColumns = [
     { key: 'remarks', label: 'remarks', isFilter: false },
     { key: 'client_drive_link', label: 'client drive link', isFilter: false },
     // { key: 'clients_details', label: 'Client Details', isFilter: false },
-    { key: 'payment_drive_link', label: 'payment drive link', isFilter: false },
+    // { key: 'payment_drive_link', label: 'payment drive link', isFilter: false },
     { key: 'order_status', label: 'Record Status', isFilter: true }
 ];
 // console.log(dropdownOptions.bank_account_options)
@@ -185,6 +185,7 @@ export function Tablepage({ searchTerm }) {
     const [editingCell, setEditingCell] = useState(null); // { rowIndex, fieldName }
     const [editValue, setEditValue] = useState('');
     const [phaseModal, setPhaseModal] = useState(null); // { phase, rowIndex, data: { payment, date, details } }
+    const [bankAccountConfirm, setBankAccountConfirm] = useState(null); // { currentAccount, newAccount }
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
     const [dropdownOptions, setDropdownOptions] = useState({ we_chats: [], employee_names: [], order_type_options: [], bank_account_options: [], payment_method_options: [] });
     const [settingsOptions, setSettingsOptions] = useState({
@@ -409,10 +410,21 @@ export function Tablepage({ searchTerm }) {
         }));
     };
 
-    const submitPhaseModal = async (e) => {
-        e.preventDefault();
+    const submitPhaseModal = async (e, bypassConfirm = false) => {
+        if (e) e.preventDefault();
         if (!phaseModal) return;
         const { rowIndex, phase, data } = phaseModal;
+
+        const currentGeneralAccount = tableData[rowIndex].receive_bank_account;
+        const newAccount = data.receive_bank_account;
+        
+        if (!bypassConfirm && currentGeneralAccount && newAccount && currentGeneralAccount !== newAccount) {
+            setBankAccountConfirm({
+                currentAccount: currentGeneralAccount,
+                newAccount: newAccount
+            });
+            return;
+        }
 
         const paymentField = `phase_${phase}_payment`;
         const dateField = `phase_${phase}_payment_date`;
@@ -463,6 +475,7 @@ export function Tablepage({ searchTerm }) {
 
         setTableData(updatedTableData);
         setPhaseModal(null);
+        setBankAccountConfirm(null);
 
         const token = localStorage.getItem('token');
         const rowToUpdate = updatedTableData[rowIndex];
@@ -613,20 +626,22 @@ export function Tablepage({ searchTerm }) {
             payload.total_amount = newTotal;
         }
 
-        // Recalculate paid_amount and update payment_status
-        const row = updatedTableData[rowIndex];
-        const phase1 = parseFloat(row.phase_1_payment) || 0;
-        const phase2 = parseFloat(row.phase_2_payment) || 0;
-        const phase3 = parseFloat(row.phase_3_payment) || 0;
-        const newPaid = phase1 + phase2 + phase3;
+        // Recalculate paid_amount and payment_status ONLY when a phase payment field changed
+        if (phasePaymentFields.includes(fieldName)) {
+            const row = updatedTableData[rowIndex];
+            const phase1 = parseFloat(row.phase_1_payment) || 0;
+            const phase2 = parseFloat(row.phase_2_payment) || 0;
+            const phase3 = parseFloat(row.phase_3_payment) || 0;
+            const newPaid = phase1 + phase2 + phase3;
 
-        updatedTableData[rowIndex].paid_amount = newPaid;
-        payload.paid_amount = newPaid;
+            updatedTableData[rowIndex].paid_amount = newPaid;
+            payload.paid_amount = newPaid;
 
-        const totalAmt = parseFloat(row.total_amount) || 0;
-        if (newPaid >= totalAmt && totalAmt > 0) {
-            updatedTableData[rowIndex].payment_status = 'Paid';
-            payload.payment_status = 'Paid';
+            const totalAmt = parseFloat(row.total_amount) || 0;
+            if (newPaid >= totalAmt && totalAmt > 0) {
+                updatedTableData[rowIndex].payment_status = 'Paid';
+                payload.payment_status = 'Paid';
+            }
         }
 
         setTableData(updatedTableData);
@@ -898,7 +913,7 @@ export function Tablepage({ searchTerm }) {
             whatsapp_number: dropdownOptions.whatsapp_numbers || [],
         };
 
-        const textareaFields = ['journal_name', 'client_affiliations', 'remarks'];
+        const textareaFields = ['journal_name', 'client_affiliations', 'remarks', 'phase_1_payment_details', 'phase_2_payment_details', 'phase_3_payment_details'];
         const plainTextareaFields = ['title'];
         const linkFields = ['client_drive_link', 'payment_drive_link', 'phase_1_receipt', 'phase_2_receipt', 'phase_3_receipt'];
 
@@ -1150,15 +1165,15 @@ export function Tablepage({ searchTerm }) {
             phase_1_payment:              { label: 'Phase 1 Payment',          get: r => r.phase_1_payment,                            wch: 15 },
             phase_1_payment_date:         { label: 'Phase 1 Date',             get: r => formatDate(r.phase_1_payment_date),           wch: 16 },
             phase_1_payment_details:      { label: 'Phase 1 Reason',           get: r => r.phase_1_payment_details || '',              wch: 25 },
-            phase_1_receipt:              { label: 'Phase 1 Receipt',          get: r => r.phase_1_receipt || r.receipt_phase_1_url || '', wch: 30 },
+            // phase_1_receipt:              { label: 'Phase 1 Receipt',          get: r => r.phase_1_receipt || r.receipt_phase_1_url || '', wch: 30 },
             phase_2_payment:              { label: 'Phase 2 Payment',          get: r => r.phase_2_payment,                            wch: 15 },
             phase_2_payment_date:         { label: 'Phase 2 Date',             get: r => formatDate(r.phase_2_payment_date),           wch: 16 },
             phase_2_payment_details:      { label: 'Phase 2 Reason',           get: r => r.phase_2_payment_details || '',              wch: 25 },
-            phase_2_receipt:              { label: 'Phase 2 Receipt',          get: r => r.phase_2_receipt || r.receipt_phase_2_url || '', wch: 30 },
+            // phase_2_receipt:              { label: 'Phase 2 Receipt',          get: r => r.phase_2_receipt || r.receipt_phase_2_url || '', wch: 30 },
             phase_3_payment:              { label: 'Phase 3 Payment',          get: r => r.phase_3_payment,                            wch: 15 },
             phase_3_payment_date:         { label: 'Phase 3 Date',             get: r => formatDate(r.phase_3_payment_date),           wch: 16 },
             phase_3_payment_details:      { label: 'Phase 3 Reason',           get: r => r.phase_3_payment_details || '',              wch: 25 },
-            phase_3_receipt:              { label: 'Phase 3 Receipt',          get: r => r.phase_3_receipt || r.receipt_phase_3_url || '', wch: 30 },
+            // phase_3_receipt:              { label: 'Phase 3 Receipt',          get: r => r.phase_3_receipt || r.receipt_phase_3_url || '', wch: 30 },
             paid_amount:                  { label: 'Total Paid Amount',        get: r => r.paid_amount,                                wch: 16 },
             paid_amount_usd:              { label: 'Paid Amount (USD)',         get: r => r.paid_amount_usd,                            wch: 16 },
             payment_status:               { label: 'Payment Status',           get: r => r.payment_status || '',                       wch: 15 },
@@ -1532,6 +1547,38 @@ export function Tablepage({ searchTerm }) {
                                 <button type='submit' className={Style.submitBtn}>Save Changes</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Custom Bank Account Confirmation Modal */}
+            {bankAccountConfirm && (
+                <div className={Style.modalOverlay} style={{ zIndex: 11000 }}>
+                    <div className={Style.modalCard} style={{ width: '400px', padding: '24px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'center' }}>
+                            <div style={{ width: '48px', height: '48px', background: '#fffbeb', color: '#d97706', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.29 3.86-7.5 13.5a1.8 1.8 0 0 0 1.57 2.64h15.28a1.8 1.8 0 0 0 1.57-2.64l-7.5-13.5a1.8 1.8 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                            </div>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>Confirm Account Change</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#475569', margin: 0, lineHeight: 1.5 }}>
+                                The Receiver Bank Account selected <strong style={{ color: '#0f172a' }}>({bankAccountConfirm.newAccount})</strong> is different from the previously recorded account <strong style={{ color: '#0f172a' }}>({bankAccountConfirm.currentAccount})</strong>.
+                                <br/><br/>
+                                Do you want to proceed and update it?
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                <button 
+                                    onClick={() => setBankAccountConfirm(null)}
+                                    style={{ flex: 1, padding: '10px 0', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#475569', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={() => submitPhaseModal(null, true)}
+                                    style={{ flex: 1, padding: '10px 0', border: 'none', background: '#16a34a', color: '#fff', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
+                                >
+                                    Proceed
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

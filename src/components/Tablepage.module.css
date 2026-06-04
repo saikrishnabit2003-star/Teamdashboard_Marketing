@@ -270,6 +270,7 @@
 .tabledata td[data-field="order_id"],
 .tabledata td[data-field="ref_no"],
 .tabledata td[data-field="manuscript_id"] {
+
   color: #ea580c !important; /* Rich Orange cell text */
   font-weight: 600;
 }
@@ -313,31 +314,22 @@
 .tabledata td:nth-child(1) {
   width: 50px;
   text-align: center;
-  font-weight: 500;
 }
 
-/* Reference Id */
+/* ID Columns — client_id, reference_id, order_id, ref_no, manuscript_id — all same width */
+.tabledata th[data-field="client_id"],
+.tabledata td[data-field="client_id"],
 .tabledata th[data-field="reference_id"],
-.tabledata td[data-field="reference_id"] {
-  width: 140px;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-/* Order Id */
+.tabledata td[data-field="reference_id"],
 .tabledata th[data-field="order_id"],
-.tabledata td[data-field="order_id"] {
-  width: 130px;
-  text-align: center;
-}
-
-/* Client Ref ID, Manuscript ID */
+.tabledata td[data-field="order_id"],
 .tabledata th[data-field="ref_no"],
 .tabledata td[data-field="ref_no"],
 .tabledata th[data-field="manuscript_id"],
 .tabledata td[data-field="manuscript_id"] {
-  width: 120px;
+  width: 140px;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 /* Emails and Handlers */
@@ -929,4 +921,133 @@ select.editInput {
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+/* .tabledata th{
+  font-weight: bold;
+  font-size: 13px;
+  color: white;
+} */
+.tabledata th[data-field="writing_amount"],
+.tabledata th[data-field="modification_amount"],
+.tabledata th[data-field="po_amount"],
+.tabledata th[data-field="implementation_amount"] {
+  width: 260px;
+  min-width: 260px;
+  max-width: 2560px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+.tabledata td[data-field="writing_amount"],
+.tabledata td[data-field="modification_amount"],
+.tabledata td[data-field="po_amount"],
+.tabledata td[data-field="implementation_amount"] {
+  width: 260px;
+  min-width:  260px;
+  max-width: 260px;
+  /* text-align: center; */
+}
+
+.tabledata th[data-field="writing_start_date"],
+.tabledata th[data-field="writing_end_date"],
+.tabledata th[data-field="modification_start_date"],
+.tabledata th[data-field="modification_end_date"],
+.tabledata th[data-field="po_start_date"],
+.tabledata th[data-field="po_end_date"],
+.tabledata th[data-field="implementation_start_date"],
+.tabledata th[data-field="implementation_end_date"] {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  /* text-align: center; */
+}
+.tabledata td[data-field="writing_start_date"],
+.tabledata td[data-field="writing_end_date"],
+.tabledata td[data-field="modification_start_date"],
+.tabledata td[data-field="modification_end_date"],
+.tabledata td[data-field="po_start_date"],
+.tabledata td[data-field="po_end_date"],
+.tabledata td[data-field="implementation_start_date"],
+.tabledata td[data-field="implementation_end_date"] {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  /* text-align: center; */
+}
+
+
+/* Phase payment details, affiliations, remarks — scroll inside cell via .scrollableCellContent wrapper */
+.tabledata th[data-field="phase_1_payment_details"],
+.tabledata th[data-field="phase_2_payment_details"],
+.tabledata th[data-field="phase_3_payment_details"],
+.tabledata th[data-field="client_affiliations"],
+.tabledata th[data-field="remarks"] {
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.tabledata td[data-field="phase_1_payment_details"],
+.tabledata td[data-field="phase_2_payment_details"],
+.tabledata td[data-field="phase_3_payment_details"],
+.tabledata td[data-field="client_affiliations"],
+.tabledata td[data-field="remarks"] {
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  overflow: hidden; /* clipping handled by inner scrollableCellContent */
+  vertical-align: top;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+
+.tabledata th[data-field="phase_1_payment"],
+.tabledata td[data-field="phase_1_payment"],
+.tabledata th[data-field="phase_2_payment"],
+.tabledata td[data-field="phase_2_payment"],
+.tabledata th[data-field="phase_3_payment"],
+.tabledata td[data-field="phase_3_payment"]{
+    width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.tabledata th[data-field="phase_1_payment_date"],
+.tabledata th[data-field="phase_2_payment_date"],
+.tabledata th[data-field="phase_3_payment_date"],
+.tabledata td[data-field="phase_1_payment_date"],
+.tabledata td[data-field="phase_2_payment_date"],
+.tabledata td[data-field="phase_3_payment_date"]{
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.tabledata th[data-field="payment_status"],
+.tabledata td[data-field="payment_status"],
+.tabledata th[data-field="order_status"],
+.tabledata td[data-field="order_status"],
+.tabledata th[data-field="is_new_order"],
+.tabledata td[data-field="is_new_order"],
+.tabledata th[data-field="currency"],
+.tabledata td[data-field="currency"],
+.tabledata th[data-field="we_chat"],
+.tabledata td[data-field="we_chat"]{
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
 }
