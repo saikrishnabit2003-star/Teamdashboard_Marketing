@@ -315,15 +315,16 @@ export function History({ searchTerm = '' }) {
                                         >
                                             Date: {formatDate(record.phase_1_payment_date)}
                                         </span>
-                                        <p className={Style.phaseReason}>
-                                            {record.phase_1_payment_details || 'No details provided'}
-                                        </p>
+                                        
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_1_receive_bank_account || 'N/A'}
                                         </p>
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Method:</strong> {record.phase_1_payment_method || 'N/A'}
                                         </p>
+                                        <div className={Style.reasonContainer}>
+                                            {record.phase_1_payment_details || 'No details provided'}
+                                        </div>
                                     </div>
 
                                     {/* Phase 2 */}
@@ -338,15 +339,16 @@ export function History({ searchTerm = '' }) {
                                         >
                                             Date: {formatDate(record.phase_2_payment_date)}
                                         </span>
-                                        <p className={Style.phaseReason}>
-                                            {record.phase_2_payment_details || 'No details provided'}
-                                        </p>
+                                        
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_2_receive_bank_account || 'N/A'}
                                         </p>
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Method:</strong> {record.phase_2_payment_method || 'N/A'}
                                         </p>
+                                        <div className={Style.reasonContainer}>
+                                            {record.phase_2_payment_details || 'No details provided'}
+                                        </div>
                                     </div>
 
                                     {/* Phase 3 */}
@@ -361,15 +363,16 @@ export function History({ searchTerm = '' }) {
                                         >
                                             Date: {formatDate(record.phase_3_payment_date)}
                                         </span>
-                                        <p className={Style.phaseReason}>
-                                            {record.phase_3_payment_details || 'No details provided'}
-                                        </p>
+                                        
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Account:</strong> {record.phase_3_receive_bank_account || 'N/A'}
                                         </p>
                                         <p className={Style.phaseReason} style={{ marginTop: '4px' }}>
                                             <strong>Method:</strong> {record.phase_3_payment_method || 'N/A'}
                                         </p>
+                                        <div className={Style.reasonContainer}>
+                                            {record.phase_3_payment_details || 'No details provided'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

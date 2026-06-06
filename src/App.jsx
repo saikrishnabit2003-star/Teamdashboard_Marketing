@@ -59,7 +59,7 @@ function DashboardLayout() {
   const [userphoto, setuserphoto] = useState(null);
   const [themeColor, setThemeColor] = useState(localStorage.getItem('themeColor') || '#0d1b3e');
   const [selectedFont, setSelectedFont] = useState(
-    localStorage.getItem('globalFont') || "'Playwrite GB S', cursive"
+    localStorage.getItem('globalFont') || "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif"
   );
 
   useEffect(() => {

@@ -19,6 +19,8 @@ export default function HistoryContextMenu({ collection, documentId, fieldName, 
           `${BASE_URL}/history/${collection}/${documentId}/${fieldName}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(`collection : ${collection},\n documentId : ${documentId},\n fieldName : ${fieldName}`)
+        console.log(response.data.data);
         setHistory(response.data.data);
       } catch (err) {
         setError("Failed to load history.");

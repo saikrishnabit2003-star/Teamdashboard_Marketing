@@ -48,6 +48,7 @@ const Loginpage2 = () => {
           setotpverify(data.data.otp_required);
           if (data.data.otp_required === false) {
             localStorage.setItem('token', data.data.access_token);
+            localStorage.removeItem('globalFont'); // Reset font to default on login
             showNotification("Login successful", "success");
             setTimeout(() => navigate('/dashboard'), 1000);
           } else {
@@ -86,6 +87,7 @@ const Loginpage2 = () => {
         if (data?.status_code === 200) {
           setotpverify(data.data.otp_required);
           localStorage.setItem('token', data.data.access_token);
+          localStorage.removeItem('globalFont'); // Reset font to default on login
           showNotification("Verification successful", "success");
           setTimeout(() => navigate('/dashboard'), 1000);
         } else {

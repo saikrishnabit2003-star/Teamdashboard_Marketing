@@ -172,10 +172,75 @@ export function Tablepage({ searchTerm }) {
         e.preventDefault();
         const userRole = localStorage.getItem('user_role');
         if (userRole !== 'admin' && userRole !== 'manager') return;
+        
+        let collection = 'orders';
+        let documentId = row.order_db_id;
+
+        const clientFields = [
+            "name",
+            "country",
+            "email",
+            "whatsapp_no",
+            "client_ref_no",
+            "client_link",
+            "bank_account",
+            "affiliation",
+            "total_orders",
+            "client_handler",
+            "client_handler_phone_number",
+            "client_handler_name",
+            "created_at",
+            "has_photo",
+            "photo_mime",
+            "photo_path",
+            "client_affiliations"
+        ];
+
+        const paymentFields = [
+            "client_name",
+            "created_at",
+            "order_title",
+            "paid_amount",
+            "payment_date",
+            "payment_received_account",
+            "phase_1_payment",
+            "phase_1_payment_date",
+            "phase_1_payment_details",
+            "phase_1_payment_method",
+            "phase_1_receive_bank_account",
+            "phase_2_payment",
+            "phase_2_payment_date",
+            "phase_2_payment_details",
+            "phase_2_payment_method",
+            "phase_2_receive_bank_account",
+            "phase_3_payment",
+            "phase_3_payment_date",
+            "phase_3_payment_details",
+            "phase_3_payment_method",
+            "phase_3_receive_bank_account"
+        ];
+
+        // Normalize field names to their canonical backend field names
+        const fieldNameMap = {
+            'client_handler_name': 'client_handler',
+            'client_handler_phone_number': 'client_handler',
+            'client_affiliations': 'affiliation',
+        };
+        const resolvedFieldName = fieldNameMap[fieldName] ?? fieldName;
+
+        // Route collection using the ORIGINAL fieldName (matches the clientFields/paymentFields arrays)
+        if (clientFields.includes(fieldName)) {
+            collection = 'clients';
+            documentId = row.client_id;
+        } else if (paymentFields.includes(fieldName)) {
+            collection = 'payments';
+            documentId = row.order_db_id;
+        }
+
         setContextMenu({
-            collection: 'orders',
-            documentId: row.order_db_id,
-            fieldName: fieldName,
+            collection: collection,
+            documentId: documentId,
+            fieldName: resolvedFieldName,
             position: { x: e.clientX, y: e.clientY }
         });
     };
@@ -187,7 +252,7 @@ export function Tablepage({ searchTerm }) {
     const [phaseModal, setPhaseModal] = useState(null); // { phase, rowIndex, data: { payment, date, details } }
     const [bankAccountConfirm, setBankAccountConfirm] = useState(null); // { currentAccount, newAccount }
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
-    const [dropdownOptions, setDropdownOptions] = useState({ we_chats: [], employee_names: [], order_type_options: [], bank_account_options: [], payment_method_options: [] });
+    const [dropdownOptions, setDropdownOptions] = useState({ we_chats: [], employee_names: [], order_type_options: [], bank_account_options: [], payment_method_options: [], profile_names: [], whatsapp_numbers: [] });
     const [settingsOptions, setSettingsOptions] = useState({
         order_type: [],
         index: [],
@@ -285,13 +350,16 @@ export function Tablepage({ searchTerm }) {
                     if (data?.status_code === 200) {
                         setTableData(data.data || []);
                         if (data.detail) {
-                            setDropdownOptions({
+                            setDropdownOptions(prev => ({
+                                ...prev,
                                 we_chats: data.detail.we_chats || [],
                                 employee_names: data.detail.employee_names || [],
                                 order_type_options: data.detail.order_type_options || [],
                                 bank_account_options: data.detail.bank_account_options || [],
-                                payment_method_options: data.detail.payment_method_options || []
-                            });
+                                payment_method_options: data.detail.payment_method_options || [],
+                                profile_names: data.detail.profile_names || [],
+                                whatsapp_numbers: data.detail.whatsapp_numbers || []
+                            }));
                         }
                     }
                     // console.log(data.detail.bank_account_options[0].account_number);
@@ -314,7 +382,10 @@ export function Tablepage({ searchTerm }) {
                             index: result.data.index || [],
                             rank: result.data.rank || [],
                             bank_account: result.data.bank_account || [],
-                            payment_method: result.data.payment_method || []
+                            payment_method: result.data.payment_method || [],
+                            profile_names: result.data.profile_names || [],
+                            whatsapp_numbers: result.data.whatsapp_numbers || [],
+                            we_chats: result.data.we_chats || []
                         });
                     }
                 })
@@ -322,32 +393,31 @@ export function Tablepage({ searchTerm }) {
         }
     };
 
-    const fetchUsersOptions = () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            fetch(`${BASE_URL}/users/options`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.json())
-                .then(result => {
-                    console.log(result)
-                    if (result.status_code === 200 && result.data) {
-                        setDropdownOptions(prev => ({
-                            ...prev,
-                            profile_names: result.data.profile_names || [],
-                            whatsapp_numbers: result.data.whatsapp_numbers || [],
-                            we_chats: result.data.we_chats || prev.we_chats
-                        }));
-                    }
-                })
-                .catch(err => console.error("Error loading user options:", err));
-        }
-    };
+    // const fetchUsersOptions = () => {
+    //     const token = localStorage.getItem('token');
+    //     if (token) {
+    //         fetch(`${BASE_URL}/users/options`, {
+    //             headers: { 'Authorization': `Bearer ${token}` }
+    //         })
+    //             .then(res => res.json())
+    //             .then(result => {
+    //                 console.log(result)
+    //                 if (result.status_code === 200 && result.data) {
+    //                     setDropdownOptions(prev => ({
+    //                         ...prev,
+    //                         profile_names: result.data.profile_names || [],
+    //                         whatsapp_numbers: result.data.whatsapp_numbers || [],
+    //                         we_chats: result.data.we_chats || prev.we_chats
+    //                     }));
+    //                 }
+    //             })
+    //             .catch(err => console.error("Error loading user options:", err));
+    //     }
+    // };
 
     useEffect(() => {
         fetchTableData();
         fetchSettings();
-        fetchUsersOptions();
     }, []);
 
     // Handle clicking outside of filter dropdowns to close them
@@ -1254,25 +1324,25 @@ export function Tablepage({ searchTerm }) {
                     <table className={Style.tabledata}>
                         <thead>
                             <tr>
-                                <th>S.no</th>
-                                <th data-field="client_id">client Id</th>
+                                <th style={{ textTransform: 'uppercase' }}>S.no</th>
+                                <th data-field="client_id" style={{ textTransform: 'uppercase' }}>client Id</th>
                                 {columns.map((col, index) => {
                                     const dragProps = {
                                         draggable: true,
                                         onDragStart: (e) => handleDragStart(e, index),
                                         onDragOver: (e) => handleDragOver(e, index),
                                         onDragEnd: handleDragEnd,
-                                        style: { cursor: 'grab' },
+                                        style: { cursor: 'grab', textTransform: 'uppercase' },
                                         'data-field': col.key
                                     };
 
                                     if (col.isFilter) {
-                                        return <FilterHeader key={col.key} label={col.label} field={col.key} dragProps={dragProps} />;
+                                        return <FilterHeader key={col.key} label={col.label.toUpperCase()} field={col.key} dragProps={dragProps} />;
                                     }
 
                                     return (
                                         <th key={col.key} {...dragProps}>
-                                            {col.label}
+                                            {col.label.toUpperCase()}
                                         </th>
                                     );
                                 })}

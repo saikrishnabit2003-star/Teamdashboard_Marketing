@@ -140,6 +140,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 100%; /* Ensure card fills grid cell */
 }
 
 .historyCard:hover {
@@ -204,6 +205,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1; /* Take up remaining vertical space in card */
 }
 
 .phaseBlock {
@@ -211,6 +213,10 @@
   border-radius: var(--radius-md);
   padding: 12px;
   border: 1px solid #f1f3f6;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Make all phase blocks stretch equally */
+  min-height: 0; /* Important for flex children scrolling */
 }
 
 .phaseHeader {
@@ -246,6 +252,23 @@
   line-height: 1.4;
   margin: 0;
   white-space: pre-wrap;
+}
+
+.reasonContainer {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 8px;
+  white-space: pre-wrap;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  flex: 1; /* Stretch to fill the remaining space of phaseBlock */
+  overflow-y: auto;
+  min-height: 40px; /* Provide a decent minimum height */
+  max-height: 100px;
+  word-break: break-all;
 }
 
 .noData {

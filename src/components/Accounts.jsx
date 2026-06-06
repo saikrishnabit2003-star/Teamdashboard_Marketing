@@ -258,20 +258,25 @@ export function Accounts({ searchTerm }) {
         const clientIndex = sampleData.findIndex(c => c.client_id === clientId);
         const order_db_id = sampleData[clientIndex]?.order_id_db?.[0] || clientId;
         try {
+            const payload={
+                ...editClientData,
+                client_id: editClientData.client_id,
+                client_name: editClientData.name,
+                client_country: editClientData.country,
+                client_Email: editClientData.email,
+                client_whatsapp_number: editClientData.whatsapp_no,
+                client_handler_name: editClientData.client_handler_name,
+                bank_account: editClientData.bank_account,
+                client_ref_no: editClientData.client_ref_no,
+            }
             const res = await fetch(`${BASE_URL}/dashboard/orders/${order_db_id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    client_name: editClientData.name,
-                    client_country: editClientData.country,
-                    client_Email: editClientData.email,
-                    client_whatsapp_number: editClientData.whatsapp_no,
-                    client_handler_name: editClientData.client_handler_name,
-                    bank_account: editClientData.bank_account,
-                    client_ref_no: editClientData.client_ref_no,
-                    client_id: editClientData.client_id,
-                })
+                body: JSON.stringify(payload)
             });
+            console.log(payload);
+            console.log(res);
+            
             if (res.ok) {
                 const updated = [...sampleData];
                 updated[clientIndex] = { ...updated[clientIndex], ...editClientData };
@@ -284,48 +289,10 @@ export function Accounts({ searchTerm }) {
     };
 
     const renderClientCell = (client, fieldName, displayValue) => {
-        const id = client._id || client.client_id;
-        const isEditing = editingClientCell?.id === id && editingClientCell?.fieldName === fieldName;
         const value = displayValue !== undefined ? displayValue : client[fieldName];
 
-        if (isEditing) {
-            if (fieldName === 'client_handler_name') {
-                return (
-                    <td style={{ padding: '0' }}>
-                        <select
-                            autoFocus
-                            value={editClientValue}
-                            onChange={(e) => setEditClientValue(e.target.value)}
-                            onBlur={handleClientBlur}
-                            onKeyDown={handleClientKeyDown}
-                            className={styles.editInput}
-                        >
-                            <option value="">Select Handler</option>
-                            {client_handlers.map(handler => (
-                                <option key={handler} value={handler}>{handler}</option>
-                            ))}
-                        </select>
-                    </td>
-                );
-            }
-            return (
-                <td style={{ padding: '0' }}>
-                    <input
-                        autoFocus
-                        type="text"
-                        value={editClientValue}
-                        onChange={(e) => setEditClientValue(e.target.value)}
-                        onBlur={handleClientBlur}
-                        onKeyDown={handleClientKeyDown}
-                        className={styles.editInput}
-                    />
-                </td>
-            );
-        }
-
         return (
-            <td onDoubleClick={() => handleClientDoubleClick(client, fieldName, client[fieldName])}
-                onContextMenu={(e) => handleRightClick(e, client, fieldName)}
+            <td onContextMenu={(e) => handleRightClick(e, client, fieldName)}
                 style={{ cursor: 'pointer' }}>
                 {value}
             </td>
@@ -1057,17 +1024,19 @@ export function Accounts({ searchTerm }) {
                         <table>
                             <thead>
                                 <tr>
-                                    <th className={styles.checkboxTh}>
-                                        <input type="checkbox" className={styles.rowCheckbox}
-                                            checked={sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
-                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).length > 0 &&
-                                                sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
-                                                    Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).every(c => selectedClientRows.has(c.client_id))}
-                                            onChange={() => toggleSelectAllClients(sampleData.filter(c =>
-                                                (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
-                                                Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)))}
-                                        />
-                                    </th>
+                                    {(userRole === 'admin' || userRole === 'manager') && (
+                                        <th className={styles.checkboxTh}>
+                                            <input type="checkbox" className={styles.rowCheckbox}
+                                                checked={sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                    Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).length > 0 &&
+                                                    sampleData.filter(c => (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                        Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)).every(c => selectedClientRows.has(c.client_id))}
+                                                onChange={() => toggleSelectAllClients(sampleData.filter(c =>
+                                                    (!searchTerm || Object.values(c).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) &&
+                                                    Object.entries(clientFilters).every(([f, v]) => !v || String(c[f] || '').trim() === v)))}
+                                            />
+                                        </th>
+                                    )}
                                     <th>S.no</th>
                                     <ClientFilterHeader label="Client ID" field="client_id" />
                                     <ClientFilterHeader label="Client Name" field="name" />
@@ -1078,7 +1047,9 @@ export function Accounts({ searchTerm }) {
                                     <ClientFilterHeader label="Client Acc No" field="bank_account" />
                                     <th>Orders</th>
                                     <th>Photo</th>
-                                    <th className={styles.actionTh}>Actions</th>
+                                    {(userRole === 'admin' || userRole === 'manager') && (
+                                        <th className={styles.actionTh}>Actions</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
@@ -1099,12 +1070,14 @@ export function Accounts({ searchTerm }) {
                                         const isClientSelected = selectedClientRows.has(client.client_id);
                                         return (
                                             <tr key={client._id || client.client_id} className={isClientSelected ? styles.selectedRow : ''}>
-                                                <td className={styles.checkboxTd}>
-                                                    <input type="checkbox" className={styles.rowCheckbox}
-                                                        checked={isClientSelected}
-                                                        onChange={() => toggleSelectClientRow(client.client_id)}
-                                                    />
-                                                </td>
+                                                {(userRole === 'admin' || userRole === 'manager') && (
+                                                    <td className={styles.checkboxTd}>
+                                                        <input type="checkbox" className={styles.rowCheckbox}
+                                                            checked={isClientSelected}
+                                                            onChange={() => toggleSelectClientRow(client.client_id)}
+                                                        />
+                                                    </td>
+                                                )}
                                                 <td>{index + 1}</td>
                                                 {renderClientCell(client, 'client_id', <span className={styles.clientIdBadge}>{client.client_id}</span>)}
                                                 {renderClientCell(client, 'name', <span className={styles.clientNameCell}>{client.name}</span>)}
@@ -1117,7 +1090,13 @@ export function Accounts({ searchTerm }) {
                                                     <div className={styles.tooltipContainer}>
                                                         <span className={styles.ordersBadge}>{client.total_orders}</span>
                                                         <div className={styles.tooltipContent}>
-                                                            {client.order_type || "Order Type Not Mentioned"}
+                                                            {client.order_type ? (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                                                                    {client.order_type.split(',').map((item, idx) => (
+                                                                        <span key={idx} style={{ whiteSpace: 'nowrap' }}>{item.trim()}</span>
+                                                                    ))}
+                                                                </div>
+                                                            ) : "Order Type Not Mentioned"}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -1145,12 +1124,14 @@ export function Accounts({ searchTerm }) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className={styles.actionTd}>
-                                                    <div className={styles.actionBtns}>
-                                                        <button className={styles.editRowBtn} title="Edit" onClick={() => handleEditClientOpen(client)}>✏️</button>
-                                                        <button className={styles.deleteRowBtn} title="Delete" onClick={() => setClientDeleteConfirm({ type: 'single', client })}>🗑️</button>
-                                                    </div>
-                                                </td>
+                                                {(userRole === 'admin' || userRole === 'manager') && (
+                                                    <td className={styles.actionTd}>
+                                                        <div className={styles.actionBtns}>
+                                                            <button className={styles.editRowBtn} title="Edit" onClick={() => handleEditClientOpen(client)}>✏️</button>
+                                                            <button className={styles.deleteRowBtn} title="Delete" onClick={() => setClientDeleteConfirm({ type: 'single', client })}>🗑️</button>
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     });
